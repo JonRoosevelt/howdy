@@ -4,8 +4,28 @@ Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack and brow
 
 ## Install
 
-1. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick this folder.
-2. Click the extension icon and open the **Settings** tab.
+Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google and Slack sessions.
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/JonRoosevelt/howdy.git
+   ```
+2. Open `chrome://extensions` (or the equivalent page in your browser).
+3. Turn on **Developer mode**.
+4. Click **Load unpacked** and pick the `howdy` folder.
+5. Pin the extension, click its icon and open the **Settings** tab to finish the [setup](#setup).
+
+The browser may warn about developer-mode extensions on startup; that is expected for unpacked extensions.
+
+### Update
+
+Unpacked extensions do not update on their own:
+
+```sh
+cd howdy && git pull
+```
+
+Then click the reload icon on the extension's card in `chrome://extensions`.
 
 ## Setup
 
