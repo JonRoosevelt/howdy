@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Howdy</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    nav button { font: inherit; border: 0; background: none; padding: .4rem .8rem; cursor: pointer; border-radius: 6px; }
+    nav button.on { background: #eee; }
+    section { display: none; } section.on { display: block; }
+    .out { white-space: pre-wrap; } .out h1, .out h2, .out h3 { margin: .8rem 0 0; }
+    .muted { color: #888; font-size: .85rem; }
+    label { display: block; margin: .6rem 0; } input, select, textarea { font: inherit; width: 100%; box-sizing: border-box; }
+    .msg { padding: .5rem .8rem; border-radius: 8px; margin: .5rem 0; } .user { background: #eef4ff; } .assistant { background: #f6f6f6; }
+    code { background: #f2f2f2; padding: 0 .3rem; }
+    .item { border: 1px solid #eee; border-radius: 10px; padding: .7rem 1rem; margin: .6rem 0; }
+    .item h4 { margin: .3rem 0; } .item p { margin: .2rem 0; } .item a { color: inherit; }
+    .pill { font-size: .75rem; padding: .1rem .5rem; border-radius: 99px; border: 1px solid #6b5bd6; color: #6b5bd6; }
+    .pill.active { background: #6b5bd6; color: #fff; }
+    .cta { margin-left: .5rem; border-radius: 99px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+    <button data-tab="brief" class="on">Brief</button>
+    <button data-tab="report">Reports</button>
+    <button data-tab="chat">Chat</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+
+  <section id="brief" class="on">
+    <p><button id="brief-go">Generate now</button> <span class="muted" id="brief-at"></span></p>
+    <div class="out" id="brief-out"></div>
+  </section>
+
+  <section id="report">
+    <label>Period
+      <select id="report-days"><option value="1">Last day</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+    </label>
+    <label>Focus (optional)<textarea id="report-extra" rows="2" placeholder="e.g. only project X, formatted for a 1:1 with my manager"></textarea></label>
+    <p><button id="report-go">Generate report</button> <span class="muted" id="report-at"></span></p>
+    <div class="out" id="report-out"></div>
+  </section>
+
+  <section id="chat">
+    <div id="chat-log"></div>
+    <p class="muted" id="chat-status"></p>
+    <form id="chat-form"><input id="q" placeholder="Ask about your day, email, Slack, what you read..." autocomplete="off"></form>
+  </section>
+
+  <section id="settings">
+    <form id="settings-form">
+      <h3>LLM</h3>
+      <label>Provider
+        <select name="provider"><option value="openai">OpenAI-compatible (OpenAI, OpenRouter, Ollama, LM Studio, Groq, Gemini...)</option><option value="anthropic">Anthropic</option></select>
+      </label>
+      <label>Base URL <input name="baseUrl" list="base-urls" placeholder="empty = OpenAI (or Anthropic, depending on the provider)"></label>
+      <datalist id="base-urls">
+        <option value="https://api.deepseek.com">DeepSeek</option>
+        <option value="https://openrouter.ai/api/v1">OpenRouter</option>
+        <option value="https://generativelanguage.googleapis.com/v1beta/openai">Gemini</option>
+        <option value="https://api.groq.com/openai/v1">Groq</option>
+        <option value="http://localhost:11434/v1">Ollama</option>
+        <option value="https://api.openai.com/v1">OpenAI</option>
+      </datalist>
+      <label>Model <input name="model" placeholder="e.g. deepseek-v4-flash, gpt-5, claude-sonnet-5-5"></label>
+      <label>API key <input name="apiKey" type="password"></label>
+      <h3>Google (Gmail + Calendar)</h3>
+      <p class="muted">Uses the Google account already signed in to this browser.</p>
+      <label>Account (the N in mail.google.com/mail/u/N) <input name="googleUser" type="number" min="0" value="0"></label>
+      <p><button type="button" id="google-test">Test Google</button> <span class="muted" id="google-status"></span></p>
+      <h3>Slack</h3>
+      <p><button type="button" id="slack-connect">Connect Slack</button> <span class="muted">opens Slack on the web; if you are already signed in, just close the tab</span></p>
+      <label>Workspace <select name="slackTeam" id="slack-team"></select></label>
+      <h3>Brief</h3>
+      <label>Morning Brief hour <input name="briefHour" type="number" min="0" max="23"></label>
+      <p><button>Save</button> <span class="muted" id="saved"></span></p>
+    </form>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
