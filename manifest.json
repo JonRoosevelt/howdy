@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Howdy",
+  "version": "0.1.0",
+  "description": "Morning Brief, reports and chat over your calendar, inbox, Slack and browsing history. Bring your own LLM.",
+  "permissions": ["history", "storage", "alarms", "cookies", "offscreen", "declarativeNetRequestWithHostAccess"],
+  "host_permissions": [
+    "https://*.google.com/*",
+    "https://*.slack.com/*"
+  ],
+  "optional_host_permissions": ["*://*/*"],
+  "content_scripts": [
+    { "matches": ["https://app.slack.com/*"], "js": ["slack-session.js"] },
+    { "matches": ["https://mail.google.com/mail/*"], "js": ["gmail-frame.js"], "world": "MAIN", "run_at": "document_start", "all_frames": true }
+  ],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "Howdy" }
+}
