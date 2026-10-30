@@ -1,12 +1,12 @@
 # Howdy
 
-Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack and browser history. A browser extension for Chromium browsers that works with your own LLM.
+Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack, Jira and browser history. A browser extension for Chromium browsers that works with your own LLM.
 
 <p align="center"><img src="docs/images/brief.png" alt="A Morning Brief page: greeting, to-dos, updates, the day's agenda and a botanical print of the day" width="720"></p>
 
 ## Install
 
-Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google and Slack sessions.
+Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google, Slack and Jira sessions.
 
 1. Clone the repository:
    ```sh
@@ -15,7 +15,7 @@ Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No bu
 2. Open `chrome://extensions` (or the equivalent page in your browser).
 3. Turn on **Developer mode**.
 4. Click **Load unpacked** and pick the `howdy` folder.
-5. Pin the extension, click its icon and open **Settings** to finish the [setup](#setup).
+5. Pin the extension, click its icon and open **Settings** and **Sources** to finish the [setup](#setup).
 
 The browser may warn about developer-mode extensions on startup; that is expected for unpacked extensions.
 
@@ -37,11 +37,12 @@ Then click the reload icon on the extension's card in `chrome://extensions`.
 
 On **Save** the browser asks for permission to call the LLM host. Accept it, or requests are blocked.
 
-**Google (Gmail + Calendar)**
-Nothing to configure: Howdy uses the Google account already signed in to the browser. With several accounts, enter the N from `mail.google.com/mail/u/N`. Use **Test Google** to check the connection.
-
-**Slack**
-Click **Connect Slack** to open Slack on the web. If you are already signed in, Howdy picks up the session on its own. Then pick the workspace and save. If the session expires, click it again.
+**Sources**
+The **Sources** tab lists each connector with its live status (signed in as whom, or what is wrong). Every source reuses the session already open in the browser, so there is nothing to paste.
+- **Google (Calendar + Gmail):** uses the Google account signed in to the browser. With several accounts, enter the N from `mail.google.com/mail/u/N`. **Test Gmail** also checks Gmail, which is slower.
+- **Slack:** click **Connect** to open Slack on the web. If you are already signed in, Howdy picks up the session on its own. Pick the workspace. If the session expires, click **Reconnect**.
+- **Jira (Cloud):** Howdy suggests the `*.atlassian.net` sites from your browser history. Pick or type yours; you only need to be signed in to it.
+- **Browser history:** always on, read locally.
 
 ## Use
 
@@ -88,7 +89,7 @@ npx playwright install chromium
 npm run check
 ```
 
-Loads the extension in Chromium with a mocked LLM, Slack, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, and the chat panel on a regular site.
+Loads the extension in Chromium with a mocked LLM, Slack, Jira, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, and the chat panel on a regular site.
 
 ## More
 

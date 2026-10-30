@@ -1,11 +1,16 @@
 import { calendarEvents, closeGmail, searchGmail } from './google.js';
-import { docs, get, openDoc, set, settings } from './lib.js';
+import { docs, get, jira, jiraSites, openDoc, set, settings, slack } from './lib.js';
 import { $, el, when } from './ui.js';
 
+let checked = false;
 function tab(name) {
   document.querySelectorAll('nav button, section').forEach((e) => e.classList.remove('on'));
   document.querySelector(`nav [data-tab=${name}]`).classList.add('on');
   $(`#${name}`).classList.add('on');
+  if (name === 'sources' && !checked) {
+    checked = true;
+    ['google', 'slack', 'jira'].forEach((s) => check(s));
+  }
 }
 document.querySelectorAll('nav button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 chrome.action.setBadgeText({ text: '' });
@@ -40,7 +45,7 @@ setInterval(renderJob, 1000);
 chrome.storage.onChanged.addListener((c, area) => {
   if (c.docs) renderHistory();
   if (area === 'session' && c.job) renderJob();
-  if (c.slackTeams) renderSlackTeams();
+  if (c.slackTeams) renderSlackTeams().then(() => check('slack'));
 });
 
 const generate = (kind, opts) => chrome.runtime.sendMessage({ type: 'generate', kind, opts });
@@ -49,15 +54,71 @@ $('#report-go').onclick = () => generate('report', { days: Number($('#report-day
 
 const form = $('#settings-form');
 
+const plural = (n, one) => `${n} ${one}${n === 1 ? '' : 's'}`;
+
+const CHECKS = {
+  async google(gmail) {
+    const user = (await settings()).googleUser ?? 0;
+    const today = new Date().setHours(0, 0, 0, 0);
+    const events = await calendarEvents(user, new Date(today).toISOString(), new Date(today + 864e5).toISOString());
+    const cal = `Calendar ok, ${plural(events.length, 'event')} today`;
+    if (!gmail) return cal;
+    try {
+      return `${cal}. Gmail ok, ${plural((await searchGmail(user, 'in:inbox', 5)).length, 'thread')}`;
+    } finally {
+      await closeGmail();
+    }
+  },
+  async slack() {
+    const r = await slack('auth.test');
+    return `Signed in as ${r.user} on ${r.team}`;
+  },
+  async jira() {
+    const me = await jira('/rest/api/3/myself');
+    return `Signed in as ${me.displayName} on ${me.site}`;
+  },
+};
+
+async function check(source, ...args) {
+  const row = $(`[data-source=${source}]`);
+  const status = row.querySelector('.status');
+  row.dataset.state = 'checking';
+  status.textContent = 'Checking...';
+  try {
+    status.textContent = await CHECKS[source](...args);
+    row.dataset.state = 'ok';
+  } catch (e) {
+    status.textContent = e.message;
+    row.dataset.state = 'error';
+  }
+}
+
 async function renderSlackTeams() {
   const teams = (await get('slackTeams')) ?? [];
+  $('#slack-team').hidden = !teams.length;
+  $('#slack-connect').textContent = teams.length ? 'Reconnect' : 'Connect';
   $('#slack-team').replaceChildren(...teams.map((t) => el('option', { value: t.id, textContent: t.name })));
   $('#slack-team').value = (await settings()).slackTeam ?? teams[0]?.id ?? '';
 }
 await renderSlackTeams();
 $('#slack-connect').onclick = () => chrome.tabs.create({ url: 'https://app.slack.com/client' });
+$('#gmail-test').onclick = () => check('google', true);
 
-for (const [k, v] of Object.entries(await settings())) if (form.elements[k]) form.elements[k].value = v;
+const sites = await jiraSites();
+$('#jira-sites').replaceChildren(...sites.map((s) => el('option', { value: s })));
+if (sites[0]) $('#jira-site').placeholder = sites[0];
+$('#jira-open').onclick = async () => chrome.tabs.create({ url: `https://${(await settings()).jiraSite || sites[0] || 'start.atlassian.com'}` });
+
+const current = await settings();
+for (const input of document.querySelectorAll('[data-setting]')) {
+  if (current[input.dataset.setting] != null) input.value = current[input.dataset.setting];
+  input.onchange = async () => {
+    await set('settings', { ...(await settings()), [input.dataset.setting]: input.value.trim() });
+    check(input.closest('[data-source]').dataset.source);
+  };
+}
+
+for (const [k, v] of Object.entries(current)) if (form.elements[k]) form.elements[k].value = v;
 
 form.onsubmit = async (e) => {
   e.preventDefault();
@@ -66,20 +127,6 @@ form.onsubmit = async (e) => {
   const { protocol, hostname } = new URL(s.baseUrl || def);
   // Must run before any await so the click still counts as a user gesture.
   const granted = chrome.permissions.request({ origins: [`${protocol}//${hostname}/*`] });
-  await set('settings', s);
+  await set('settings', { ...(await settings()), ...s });
   $('#saved').textContent = (await granted) ? 'Saved' : 'Saved, but without permission for the LLM host';
-};
-
-$('#google-test').onclick = async () => {
-  const user = form.elements.googleUser.value || 0;
-  const today = new Date().setHours(0, 0, 0, 0);
-  const status = $('#google-status');
-  status.textContent = 'Testing...';
-  const [cal, mail] = await Promise.allSettled([
-    calendarEvents(user, new Date(today).toISOString(), new Date(today + 864e5).toISOString()),
-    searchGmail(user, 'in:inbox', 5),
-  ]);
-  await closeGmail();
-  const show = (name, r) => `${name}: ${r.status === 'fulfilled' ? `ok (${r.value.length})` : r.reason.message}`;
-  status.textContent = `${show('Calendar', cal)} | ${show('Gmail', mail)}`;
 };

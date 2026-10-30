@@ -29,7 +29,9 @@
 High priority: much of the to-do list for people working with tickets and PRs lives here. Reuse the browser session wherever possible.
 
 - [ ] **GitHub:** a `github_search(url)` tool that reads a GitHub URL, fetching `github.com/pulls/review-requested`, `github.com/pulls` and `github.com/notifications` with cookies.
-- [ ] **Jira/Confluence:** REST `/{site}.atlassian.net/rest/api/3/search?jql=assignee=currentUser() AND updated>=-3d` and Confluence CQL, both with session cookies. Discover `site` from browser history.
+- [x] **Jira:** `search_jira` (JQL) and `read_jira_issue` with session cookies; site discovered from browser history.
+- [ ] **Confluence:** CQL search with the same session.
+- [ ] **Per-source toggle** in Sources, to leave a connected source out of briefs.
 - [ ] **Notion:** the internal `www.notion.so/api/v3/search` with the `token_v2` cookie, or the public API with an integration. Evaluate how stable each is.
 - [ ] **Linear:** GraphQL on `api.linear.app` with the session; a `list_linear_notifications` tool for the inbox.
 - [ ] **`list_recent_people`:** combine Gmail senders, meeting attendees and Slack DMs to map who the user works with most, and use it to scope the other searches.

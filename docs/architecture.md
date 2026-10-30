@@ -37,6 +37,8 @@ Tools:
 | `slack_activity` | Slack mentions and recent DMs |
 | `search_slack` | Slack search with Slack operators |
 | `read_slack_thread` | Full Slack thread |
+| `search_jira` | Jira issues by JQL |
+| `read_jira_issue` | Jira issue description and latest comments |
 | `search_history` | Local browser history |
 
 ## Morning Brief
@@ -82,6 +84,8 @@ Every source reuses the session the user already has in the browser, so there is
 
 **Slack.** `slack-session.js` runs on `app.slack.com` and reads `localStorage.localConfig_v2`, where Slack's web client keeps a per-workspace `xoxc-` token. API calls go to `https://<workspace>.slack.com/api/<method>` with that token in the body and `credentials: 'include'`, so the browser adds the `d` session cookie.
 
+**Jira.** Jira Cloud sites are suggested from browser history (`*.atlassian.net` hosts, most visited first), or set in the Sources tab. Calls go to `https://<site>/rest/api/3/search/jql` and `/rest/api/3/issue/<key>` with `credentials: 'include'`, so the browser adds the Atlassian session cookie. Descriptions and comments come as Atlassian Document Format and are flattened to text.
+
 **Google Calendar.** The extension:
 1. reads the `SAPISID` cookie with `chrome.cookies`;
 2. builds `Authorization: SAPISIDHASH <ts>_<sha1(ts + " " + SAPISID + " https://calendar.google.com")>`;
@@ -103,6 +107,7 @@ Calls share one offscreen document, so they run one at a time. The document clos
 ## Security notes
 
 - The `cookies` permission on `*.google.com` gives access as broad as the signed-in Google account, not only read access to Gmail and Calendar.
+- Host access to `*.atlassian.net` lets the extension act as the signed-in Jira user; the tools only read.
 - The LLM API key and the Slack `xoxc` token are stored unencrypted in `chrome.storage.local`.
 - Tools are read-only, except `create_report` in the chat, which only writes to the local history. Source content and page content are untrusted, and the prompts tell the model to treat them as data, not instructions.
 - The chat content script runs on every `http(s)` site, so the extension asks for access to all sites at install.

@@ -30,14 +30,30 @@
     #history .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #history .muted { font-style: italic; font-size: 12px; }
     #settings h3:first-child { margin-top: 4px; }
-    #settings button:not(.btn) { border: 1.5px solid var(--ink-3); background: none; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; font-weight: 600; }
-    #settings button:not(.btn):hover { border-color: var(--blue); color: var(--blue); }
+    .chip { border: 1.5px solid var(--ink-3); background: none; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .chip:hover { border-color: var(--blue); color: var(--blue); }
+    #sources > p { margin: 0 0 12px; font-size: 13px; font-style: italic; }
+    #connectors { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    #connectors li { display: grid; grid-template-columns: 18px 1fr; gap: 0 12px; padding: 12px 14px; border: 1.5px dashed var(--line); border-radius: 18px 18px 18px 4px; transition: box-shadow .3s, border-color .3s; }
+    #connectors li[data-state=ok] { border: 1.5px solid var(--ink); box-shadow: 4px 4px 0 var(--pink-wash); }
+    #connectors li[data-state=error] { border: 1.5px solid var(--pink); }
+    .dot { width: 16px; height: 16px; margin-top: 5px; border-radius: 0 60% 0 60%; border: 2px solid var(--ink-3); }
+    [data-state=ok] .dot { background: var(--blue); border-color: var(--blue); }
+    [data-state=error] .dot { background: var(--pink-wash); border-color: var(--pink); }
+    [data-state=checking] .dot { animation: sway .6s ease-in-out infinite alternate; }
+    @keyframes sway { to { rotate: 90deg; } }
+    .name { font: 700 16px var(--font); } .what { font: italic 400 13px var(--font); color: var(--ink-3); margin-left: 4px; }
+    .status { margin: 2px 0 0; font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+    [data-state=error] .status { color: var(--pink-ink); }
+    .setup { grid-column: 2; display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .setup input, .setup select { flex: 1; min-width: 0; padding: 5px 10px; font-size: 13px; }
+    .setup small { color: var(--ink-3); font-size: 12px; }
   </style>
 </head>
 <body>
   <header>
     <span class="logo">Howdy</span>
-    <nav><button data-tab="home" class="on">Home</button><button data-tab="settings">Settings</button></nav>
+    <nav><button data-tab="home" class="on">Home</button><button data-tab="sources">Sources</button><button data-tab="settings">Settings</button></nav>
   </header>
 
   <section id="home" class="on">
@@ -51,6 +67,31 @@
     <h3>Recently picked</h3>
     <ul id="history"></ul>
     <p class="muted" id="empty">Nothing yet. Generated briefs and reports show up here and open in a new tab.</p>
+  </section>
+
+  <section id="sources">
+    <p class="muted">Howdy reads with the sessions already open in this browser. Nothing to paste.</p>
+    <ul id="connectors">
+      <li data-source="google">
+        <span class="dot"></span>
+        <div><span class="name">Google</span><span class="what">Calendar and Gmail</span><p class="status"></p></div>
+        <div class="setup"><small>Account</small><input data-setting="googleUser" type="number" min="0" value="0" style="flex: 0 0 64px" title="The N in mail.google.com/mail/u/N"><button type="button" class="chip" id="gmail-test">Test Gmail</button></div>
+      </li>
+      <li data-source="slack">
+        <span class="dot"></span>
+        <div><span class="name">Slack</span><span class="what">mentions, DMs and search</span><p class="status"></p></div>
+        <div class="setup"><select data-setting="slackTeam" id="slack-team"></select><button type="button" class="chip" id="slack-connect">Connect</button></div>
+      </li>
+      <li data-source="jira">
+        <span class="dot"></span>
+        <div><span class="name">Jira</span><span class="what">issues and comments</span><p class="status"></p></div>
+        <div class="setup"><input data-setting="jiraSite" id="jira-site" list="jira-sites" placeholder="your-company.atlassian.net"><datalist id="jira-sites"></datalist><button type="button" class="chip" id="jira-open">Open</button></div>
+      </li>
+      <li data-source="history" data-state="ok">
+        <span class="dot"></span>
+        <div><span class="name">Browser history</span><span class="what">where your attention went</span><p class="status">Always on. Stays on this device, except what the LLM reads.</p></div>
+      </li>
+    </ul>
   </section>
 
   <section id="settings">
@@ -70,13 +111,6 @@
       </datalist>
       <label>Model <input name="model" placeholder="e.g. deepseek-v4-flash, gpt-5, claude-sonnet-5-5"></label>
       <label>API key <input name="apiKey" type="password"></label>
-      <h3>Google (Gmail + Calendar)</h3>
-      <p class="muted">Uses the Google account already signed in to this browser.</p>
-      <label>Account (the N in mail.google.com/mail/u/N) <input name="googleUser" type="number" min="0" value="0"></label>
-      <p><button type="button" id="google-test">Test Google</button> <span class="muted" id="google-status"></span></p>
-      <h3>Slack</h3>
-      <p><button type="button" id="slack-connect">Connect Slack</button> <span class="muted">opens Slack on the web; if you are already signed in, just close the tab</span></p>
-      <label>Workspace <select name="slackTeam" id="slack-team"></select></label>
       <h3>Brief</h3>
       <label>Morning Brief hour <input name="briefHour" type="number" min="0" max="23"></label>
       <p><button class="btn">Save</button> <span class="muted" id="saved"></span></p>

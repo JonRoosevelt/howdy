@@ -58,7 +58,6 @@ export async function calendarEvents(user, timeMin, timeMax) {
       headers: {
         authorization: await sapisidHash(CALENDAR_ORIGIN),
         'x-goog-authuser': String(user),
-        'x-origin': CALENDAR_ORIGIN,
       },
     });
     if (r.ok) {

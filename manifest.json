@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Howdy",
-  "version": "0.2.0",
-  "description": "Morning Brief, reports and chat over your calendar, inbox, Slack and browsing history. Bring your own LLM.",
+  "version": "0.3.0",
+  "description": "Morning Brief, reports and chat over your calendar, inbox, Slack, Jira and browsing history. Bring your own LLM.",
   "permissions": [
     "history",
     "storage",
@@ -13,7 +13,8 @@
   ],
   "host_permissions": [
     "https://*.google.com/*",
-    "https://*.slack.com/*"
+    "https://*.slack.com/*",
+    "https://*.atlassian.net/*"
   ],
   "optional_host_permissions": [
     "*://*/*"
