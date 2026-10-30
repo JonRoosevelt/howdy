@@ -2,6 +2,8 @@
 
 Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack and browser history. A browser extension for Chromium browsers that works with your own LLM.
 
+<p align="center"><img src="docs/images/brief.png" alt="A Morning Brief page: greeting, to-dos, updates, the day's agenda and a botanical print of the day" width="720"></p>
+
 ## Install
 
 Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google and Slack sessions.
@@ -46,6 +48,27 @@ Click **Connect Slack** to open Slack on the web. If you are already signed in, 
 - **Popup** (click the icon): generate a Morning Brief or a report, and browse the history. Each brief and report opens as its own page in a new tab, with a public-domain botanical study from The Met, printed in two riso-style inks.
 - **Brief page:** check off to-dos (saved), open the source, or click a suggestion button to ask the chat about it.
 - **Chat:** a blue leaf-shaped button sits at the bottom right of every page. It opens a panel on the right where you can chat with the agent, and the page you are on is added as context. Ask for a report and the chat writes it, saves it to the history and opens it in a new tab.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/chat.png" alt="The chat panel open on a sprint board, answering from the page with a table"></td>
+    <td width="50%"><img src="docs/images/report.png" alt="A weekly report page"></td>
+  </tr>
+  <tr>
+    <td align="center">Chat on any page, with the page as context</td>
+    <td align="center">Reports open as their own page</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/popup.png" alt="The popup with generate buttons and history"></td>
+    <td><img src="docs/images/brief-dark.png" alt="The Morning Brief in dark mode"></td>
+  </tr>
+  <tr>
+    <td align="center">Popup: generate and browse the history</td>
+    <td align="center">Dark mode</td>
+  </tr>
+</table>
+
+Screenshots use sample data.
 
 ## How it works
 
