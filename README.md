@@ -48,6 +48,7 @@ The **Sources** tab lists each connector with its live status (signed in as whom
 
 - **Popup** (click the icon): generate a Morning Brief or a report, and browse the history. Each brief and report opens as its own page in a new tab, with a public-domain botanical study from The Met, printed in two riso-style inks.
 - **Brief page:** check off to-dos (saved), open the source, or click a suggestion button to ask the chat about it.
+- **Themes:** Settings has a color theme picker (Riso Garden, Tokyo Night, Catppuccin, Gruvbox, Nord, Rosé Pine and more). The choice applies to every Howdy page, the chat and the floating button, and is kept across sessions.
 - **Chat:** a blue leaf-shaped button sits at the bottom right of every page. It opens a panel on the right where you can chat with the agent, and the page you are on is added as context. Ask for a report and the chat writes it, saves it to the history and opens it in a new tab.
 
 <table>
@@ -66,6 +67,22 @@ The **Sources** tab lists each connector with its live status (signed in as whom
   <tr>
     <td align="center">Popup: generate and browse the history</td>
     <td align="center">Dark mode</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/themes.png" alt="The theme picker in Settings, with Tokyo Night selected"></td>
+    <td><img src="docs/images/sources.png" alt="The Sources tab with live status for Google, Slack, Jira and browser history"></td>
+  </tr>
+  <tr>
+    <td align="center">Color themes, kept across sessions</td>
+    <td align="center">Sources with live status</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/brief-tokyo-night.png" alt="The Morning Brief in the Tokyo Night theme"></td>
+    <td><img src="docs/images/brief-flexoki-light.png" alt="The Morning Brief in the Flexoki Light theme"></td>
+  </tr>
+  <tr>
+    <td align="center">Tokyo Night</td>
+    <td align="center">Flexoki Light</td>
   </tr>
 </table>
 

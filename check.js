@@ -218,6 +218,19 @@ try {
   await site.evaluate(() => [...document.querySelector('howdy-chat').shadowRoot.querySelectorAll('iframe')][0].contentWindow.postMessage({ howdy: 'ask', prompt: 'leak' }, '*'));
   await site.waitForTimeout(500);
   assert.equal(requests.length, before);
+  await page.click('nav [data-tab=settings]');
+  await page.click('#themes [role=radio]:has-text("Nord")');
+  const bg = (p) => p.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await report.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(46, 52, 64)');
+  await site.waitForFunction(() => document.querySelector('howdy-chat').style.getPropertyValue('--howdy-blue') === '#88c0d0');
+  await page.reload();
+  assert.equal(await bg(page), 'rgb(46, 52, 64)', 'the theme survives a reload');
+  assert.equal(await page.getAttribute('#themes [aria-checked=true]', 'role'), 'radio');
+  assert.equal(await page.textContent('#themes [aria-checked=true]'), 'Nord');
+  await page.click('nav [data-tab=settings]');
+  await page.click('#themes [role=radio]:has-text("Riso Garden")');
+  await report.waitForFunction(() => getComputedStyle(document.body).backgroundColor !== 'rgb(46, 52, 64)');
+
   assert.deepEqual(errors, []);
   console.log('ok');
 } finally {

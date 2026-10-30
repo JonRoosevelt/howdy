@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Howdy</title>
   <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
   <style>
     body { background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) .6px, transparent .8px); background-size: 5px 5px; }
     .page { max-width: 1120px; margin: 0 auto; padding: clamp(20px, 3vw, 32px) clamp(16px, 5vw, 48px) 96px; }
@@ -18,14 +19,14 @@
     .counts span { font: 600 15px var(--font); padding: 6px 14px; border: 1.5px solid var(--ink); border-radius: 99px; }
 
     .art { margin: 0; }
-    .riso { position: relative; aspect-ratio: 3 / 4; border-radius: 999px 999px 18px 18px; overflow: hidden; background: #FF7FB1; isolation: isolate; box-shadow: 10px 10px 0 var(--pink-wash); }
+    .riso { position: relative; aspect-ratio: 3 / 4; border-radius: 999px 999px 18px 18px; overflow: hidden; background: var(--riso-paper); isolation: isolate; box-shadow: 10px 10px 0 var(--pink-wash); }
     .riso .ink { position: absolute; inset: 0; isolation: isolate; mix-blend-mode: multiply; opacity: 0; transition: opacity .8s ease; }
     .riso .ink.loaded { opacity: 1; }
     .riso img { position: absolute; inset: -14%; width: 128%; height: 128%; object-fit: cover; object-position: 40% 35%; filter: grayscale(1) brightness(.92) contrast(2.4); }
     /* Screen maps white paper to white and dark lines to blue ink; multiply then prints that over the pink stock. */
-    .riso .ink::after { content: ''; position: absolute; inset: 0; background: #2340B8; mix-blend-mode: screen; }
-    .riso.empty::before { content: ''; position: absolute; left: 50%; top: 22%; width: 44%; aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: #2340B8; mix-blend-mode: multiply; opacity: .75; }
-    .riso.empty::after { content: ''; position: absolute; left: 22%; bottom: 10%; width: 56%; height: 38%; border-radius: 0 100% 0 100%; background: #2340B8; mix-blend-mode: multiply; opacity: .9; }
+    .riso .ink::after { content: ''; position: absolute; inset: 0; background: var(--riso-ink); mix-blend-mode: screen; }
+    .riso.empty::before { content: ''; position: absolute; left: 50%; top: 22%; width: 44%; aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: var(--riso-ink); mix-blend-mode: multiply; opacity: .75; }
+    .riso.empty::after { content: ''; position: absolute; left: 22%; bottom: 10%; width: 56%; height: 38%; border-radius: 0 100% 0 100%; background: var(--riso-ink); mix-blend-mode: multiply; opacity: .9; }
     .caption { margin: 14px 4px 0; font: italic 400 14px/1.4 var(--font); color: var(--ink-3); text-align: center; }
 
     h2.section { font: italic 700 34px/1.1 var(--font); font-variation-settings: 'SOFT' 100, 'WONK' 1; margin: 96px 0 26px; display: inline-block; padding: 0 6px; background: linear-gradient(transparent 58%, var(--pink-wash) 58% 92%, transparent 92%); }
@@ -47,7 +48,7 @@
     .update { padding: 28px; border-radius: 28px 28px 28px 6px; position: relative; overflow: hidden; background: var(--pink-wash); }
     .update > * { position: relative; }
     .update .from { font: italic 500 15px var(--font); display: block; margin-bottom: 8px; color: var(--ink-2); }
-    .update::after { content: ''; position: absolute; right: -30px; bottom: -50px; width: 130px; height: 130px; border-radius: 0 60% 0 60%; background: #2340B8; mix-blend-mode: multiply; opacity: .18; }
+    .update::after { content: ''; position: absolute; right: -30px; bottom: -50px; width: 130px; height: 130px; border-radius: 0 60% 0 60%; background: var(--riso-ink); mix-blend-mode: multiply; opacity: .18; }
     .update.ink { background: var(--blue); color: var(--on-blue); }
     .update.ink p, .update.ink .from, .update.ink .src { color: color-mix(in srgb, var(--on-blue) 86%, transparent); }
     .update.ink .tag { border-color: var(--on-blue); color: var(--on-blue); }
@@ -69,7 +70,7 @@
 
     .ahead { display: grid; grid-template-columns: 110px 1fr; gap: 32px; align-items: center; padding: 30px 34px; border-radius: 999px 32px 32px 999px; background: var(--paper-2); }
     .moon { width: 110px; height: 110px; border-radius: 50%; background: var(--pink); position: relative; overflow: hidden; }
-    .moon::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #2340B8; translate: 34px -14px; mix-blend-mode: multiply; }
+    .moon::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--riso-ink); translate: 34px -14px; mix-blend-mode: multiply; }
     .ahead p { margin: 0; font: italic 400 28px/1.35 var(--font); font-variation-settings: 'SOFT' 100, 'WONK' 1; }
 
     .prose { max-width: 44rem; margin: 72px 0 0; font-size: 18px; line-height: 1.65; }

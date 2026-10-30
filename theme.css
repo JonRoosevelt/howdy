@@ -16,6 +16,8 @@
   --pink-ink: light-dark(#B0175A, #FF8DBD);
   --pink-wash: light-dark(#FFE1EC, #3A1D45);
   --error: light-dark(#B3261E, #FF9A8F);
+  --riso-ink: #2340B8;
+  --riso-paper: #FF7FB1;
   --font: 'Fraunces', Georgia, serif;
 }
 * { box-sizing: border-box; }

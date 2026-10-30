@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Howdy</title>
   <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
   <style>
     body { width: 380px; padding: 16px 18px 20px; font-size: 15px; line-height: 1.45; }
     header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -29,7 +30,11 @@
     #history .brief .kind { border-radius: 0 60% 0 60%; background: var(--pink); }
     #history .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #history .muted { font-style: italic; font-size: 12px; }
-    #settings h3:first-child { margin-top: 4px; }
+    #settings > h3:first-child { margin-top: 4px; }
+    #themes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+    #themes button { display: grid; gap: 6px; text-align: left; padding: 9px 10px 8px; border-radius: 12px 12px 12px 3px; border: 2px solid transparent; cursor: pointer; font: 600 13px var(--font); box-shadow: inset 0 0 0 1px rgb(128 128 128 / .35); }
+    #themes button[aria-checked=true] { border-color: var(--blue); box-shadow: 3px 3px 0 var(--pink); }
+    #themes .chips { display: flex; gap: 4px; } #themes .chips span { width: 14px; height: 14px; border-radius: 0 60% 0 60%; }
     .chip { border: 1.5px solid var(--ink-3); background: none; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
     .chip:hover { border-color: var(--blue); color: var(--blue); }
     #sources > p { margin: 0 0 12px; font-size: 13px; font-style: italic; }
@@ -95,6 +100,8 @@
   </section>
 
   <section id="settings">
+    <h3>Theme</h3>
+    <div id="themes" role="radiogroup" aria-label="Theme"></div>
     <form id="settings-form">
       <h3>LLM</h3>
       <label>Provider

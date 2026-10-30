@@ -11,6 +11,8 @@
 | `gmail.html`, `gmail-offscreen.js` | Hidden page that hosts Gmail in an iframe |
 | `gmail-frame.js` | Runs inside the hidden Gmail: reads search results and threads |
 | `slack-session.js` | Picks up the Slack web session |
+| `themes.js` | Color theme presets |
+| `theme.js` | Applies the saved theme on every Howdy page |
 | `app.html`, `app.js` | Popup: generate, history, settings |
 | `doc.html`, `doc.js` | Page for one brief or report, opened in a new tab |
 | `page.js` | Chat button and side panel; content script on every site, plain script on `doc.html` |

@@ -1,5 +1,6 @@
 import { calendarEvents, closeGmail, searchGmail } from './google.js';
 import { docs, get, jira, jiraSites, openDoc, set, settings, slack } from './lib.js';
+import { swatch, THEMES } from './themes.js';
 import { $, el, when } from './ui.js';
 
 let checked = false;
@@ -130,3 +131,20 @@ form.onsubmit = async (e) => {
   await set('settings', { ...(await settings()), ...s });
   $('#saved').textContent = (await granted) ? 'Saved' : 'Saved, but without permission for the LLM host';
 };
+
+async function renderThemes() {
+  const current = (await get('theme'))?.id ?? 'riso';
+  $('#themes').replaceChildren(
+    ...Object.entries(THEMES).map(([id, t]) => {
+      const [paper, ink, ...accents] = swatch(t);
+      return el(
+        'button',
+        { type: 'button', role: 'radio', ariaChecked: String(id === current), style: `background: ${paper}; color: ${ink}`, onclick: () => set('theme', id === 'riso' ? null : { id, ...t }) },
+        t.name,
+        el('span', { className: 'chips' }, ...[ink, ...accents].map((c) => el('span', { style: `background: ${c}` }))),
+      );
+    }),
+  );
+}
+await renderThemes();
+chrome.storage.onChanged.addListener((c) => c.theme && renderThemes());
