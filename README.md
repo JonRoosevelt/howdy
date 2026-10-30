@@ -13,7 +13,7 @@ Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No bu
 2. Open `chrome://extensions` (or the equivalent page in your browser).
 3. Turn on **Developer mode**.
 4. Click **Load unpacked** and pick the `howdy` folder.
-5. Pin the extension, click its icon and open the **Settings** tab to finish the [setup](#setup).
+5. Pin the extension, click its icon and open **Settings** to finish the [setup](#setup).
 
 The browser may warn about developer-mode extensions on startup; that is expected for unpacked extensions.
 
@@ -41,11 +41,17 @@ Nothing to configure: Howdy uses the Google account already signed in to the bro
 **Slack**
 Click **Connect Slack** to open Slack on the web. If you are already signed in, Howdy picks up the session on its own. Then pick the workspace and save. If the session expires, click it again.
 
+## Use
+
+- **Popup** (click the icon): generate a Morning Brief or a report, and browse the history. Each brief and report opens as its own page in a new tab, with a public-domain botanical study from The Met, printed in two riso-style inks.
+- **Brief page:** check off to-dos (saved), open the source, or click a suggestion button to ask the chat about it.
+- **Chat:** a blue leaf-shaped button sits at the bottom right of every page. It opens a panel on the right where you can chat with the agent, and the page you are on is added as context. Ask for a report and the chat writes it, saves it to the history and opens it in a new tab.
+
 ## How it works
 
-An agent calls tools in a loop, checks whether each to-do was already handled, and returns the brief as JSON that the page renders. CTA buttons open the chat with the prompt ready to send. See [docs/architecture.md](docs/architecture.md).
+An agent calls tools in a loop, checks whether each to-do was already handled, and returns the brief as JSON that the page renders. See [docs/architecture.md](docs/architecture.md).
 
-The brief runs on its own at the configured hour, or on the first browser start after it, and marks the icon with a badge.
+The brief also runs on its own at the configured hour, or on the first browser start after it, and marks the icon with a badge.
 
 Generated text follows the browser's language (`navigator.language`).
 
@@ -59,7 +65,7 @@ npx playwright install chromium
 npm run check
 ```
 
-Loads the extension in Chromium with a mocked LLM, Slack, Calendar and Gmail, and validates the tool loop, the session capture and the brief rendering.
+Loads the extension in Chromium with a mocked LLM, Slack, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, and the chat panel on a regular site.
 
 ## More
 

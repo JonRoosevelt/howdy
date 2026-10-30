@@ -143,19 +143,19 @@ const TOOLS = {
   },
 };
 
-const toolList = Object.entries(TOOLS);
 const schema = (t) => ({ type: 'object', properties: t.parameters, required: t.required ?? [] });
 
-async function runTool({ name, args }) {
+async function runTool(tools, { name, args }) {
   try {
-    const out = JSON.stringify(await TOOLS[name].run(typeof args === 'string' ? JSON.parse(args || '{}') : args ?? {}));
+    if (!tools[name]) throw new Error(`unknown tool ${name}`);
+    const out = JSON.stringify(await tools[name].run(typeof args === 'string' ? JSON.parse(args || '{}') : args ?? {}));
     return out.length > MAX_TOOL_CHARS ? `${out.slice(0, MAX_TOOL_CHARS)}...[truncated]` : out;
   } catch (e) {
     return `Error: ${e.message}`;
   }
 }
 
-async function anthropicStep(s, system, messages, final) {
+async function anthropicStep(s, system, messages, final, tools) {
   const r = await api(`${s.baseUrl || 'https://api.anthropic.com'}/v1/messages`, {
     method: 'POST',
     headers: {
@@ -169,7 +169,7 @@ async function anthropicStep(s, system, messages, final) {
       max_tokens: 8192,
       system,
       messages,
-      tools: toolList.map(([name, t]) => ({ name, description: t.description, input_schema: schema(t) })),
+      tools: Object.entries(tools).map(([name, t]) => ({ name, description: t.description, input_schema: schema(t) })),
       tool_choice: { type: final ? 'none' : 'auto' },
     }),
   });
@@ -185,14 +185,14 @@ async function anthropicStep(s, system, messages, final) {
   };
 }
 
-async function openaiStep(s, system, messages, final) {
+async function openaiStep(s, system, messages, final, tools) {
   const r = await api(`${s.baseUrl || 'https://api.openai.com/v1'}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...(s.apiKey && { authorization: `Bearer ${s.apiKey}` }) },
     body: JSON.stringify({
       model: s.model,
       messages: [{ role: 'system', content: system }, ...messages],
-      tools: toolList.map(([name, t]) => ({ type: 'function', function: { name, description: t.description, parameters: schema(t) } })),
+      tools: Object.entries(tools).map(([name, t]) => ({ type: 'function', function: { name, description: t.description, parameters: schema(t) } })),
       tool_choice: final ? 'none' : 'auto',
     }),
   });
@@ -205,16 +205,17 @@ async function openaiStep(s, system, messages, final) {
   };
 }
 
-export async function agent(system, messages, onTool = () => {}, maxSteps = 25) {
+export async function agent(system, messages, onTool = () => {}, extraTools = {}, maxSteps = 25) {
   const s = await settings();
+  const tools = { ...TOOLS, ...extraTools };
   if (!s.model) throw new Error('Configure the LLM in Settings');
   messages = [...messages];
   try {
     for (let i = 0; i < maxSteps; i++) {
-      const step = await (s.provider === 'anthropic' ? anthropicStep : openaiStep)(s, system, messages, i === maxSteps - 1);
+      const step = await (s.provider === 'anthropic' ? anthropicStep : openaiStep)(s, system, messages, i === maxSteps - 1, tools);
       if (!step.calls.length) return { text: step.text, messages };
       step.calls.forEach((c) => onTool(c.name));
-      step.reply(await Promise.all(step.calls.map(async (c) => ({ id: c.id, output: await runTool(c) }))));
+      step.reply(await Promise.all(step.calls.map(async (c) => ({ id: c.id, output: await runTool(tools, c) }))));
     }
     throw new Error('The model did not finish within the step limit');
   } finally {
@@ -252,6 +253,7 @@ Rules: plain text only (no markdown, HTML or em dashes). Every item has label, s
 ${RULES}`,
 
   chat: `You are my chief of staff with access to my tools. Answer by researching with the tools; do not make things up. Use [text](url) links that come from the tools. Answer in markdown, directly.
+When I ask for a report, document or page, research first, then save it with create_report and tell me it opened in a new tab.
 ${RULES}`,
 };
 
@@ -263,10 +265,39 @@ const parseJson = (t) => {
   }
 };
 
+async function painting() {
+  try {
+    // Only the top 50 hits are reliably plants; past that the search drifts into views of botanical gardens.
+    const q = 'departmentId=9&isPublicDomain=true&hasImages=true&q=botanical%20study&limit=50';
+    const { objectIDs } = await api(`https://collectionapi.metmuseum.org/public/collection/v1.1/search?${q}`);
+    const day = Math.floor(Date.now() / DAY);
+    // Some hits are marked hasImages but ship no primaryImage (rights-restricted), so try the next few.
+    for (let i = 0; i < 5; i++) {
+      const id = objectIDs[(day + i) % objectIDs.length];
+      const o = await api(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
+      const url = o.primaryImage || o.primaryImageSmall;
+      if (url) return { url, title: o.title, artist: o.artistDisplayName, date: o.objectDate, link: o.objectURL };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export const docs = async () => (await get('docs')) ?? [];
+
+export async function saveDoc(doc) {
+  doc = { id: crypto.randomUUID(), at: Date.now(), painting: await painting(), ...doc };
+  // ponytail: keeps the newest 60 in storage.local; move to IndexedDB if people want an unbounded archive
+  await set('docs', [doc, ...(await docs())].slice(0, 60));
+  return doc;
+}
+
+export const openDoc = (id) => chrome.tabs.create({ url: chrome.runtime.getURL(`doc.html?id=${id}`) });
+
 export async function generate(kind, { days = 7, extra = '', onTool } = {}) {
   const ask = kind === 'brief' ? 'Prepare my Morning Brief.' : `Write a report for the last ${days} days. ${extra}`;
   const { text } = await agent(`${PROMPTS[kind]}\n\nNow: ${new Date().toString()}`, [{ role: 'user', content: ask }], onTool);
-  const doc = { kind, at: Date.now(), text, json: kind === 'brief' ? parseJson(text) : null };
-  await set(kind, doc);
-  return doc;
+  if (kind === 'brief') return saveDoc({ kind, title: 'Morning Brief', text, json: parseJson(text) });
+  return saveDoc({ kind, title: text.match(/^# (.+)$/m)?.[1] ?? `Last ${days} days`, text, days });
 }

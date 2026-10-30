@@ -14,6 +14,14 @@
 - [x] Browser history
 - [x] End-to-end check with Playwright (`npm run check`)
 
+## Done (v0.2)
+
+- [x] Briefs and reports open as designed pages in a new tab, with a painting of the day from The Met
+- [x] Popup with generation and history
+- [x] Chat button on every page, with a side panel that uses the open page as context
+- [x] Reports created from the chat open as pages
+- [x] To-dos can be checked off
+
 ## Next
 
 ### 1. More sources
@@ -36,10 +44,11 @@ High priority: much of the to-do list for people working with tickets and PRs li
 
 ### 3. Design
 
-- [ ] A designed brief: greeting card, project pills, source icons, agenda timeline, "Looking ahead".
-- [ ] An image of the day, e.g. an open-access painting (National Gallery of Art, Met Open Access).
+- [ ] Source icons and avatars on brief items.
 - [ ] Optional brief on the new tab page (`chrome_url_overrides.newtab`).
-- [ ] Chat in a side panel (`chrome.sidePanel`; `sidebar_action` on Firefox).
+- [ ] Chat: keep the conversation when navigating or switching tabs (today each page starts fresh), a keyboard shortcut, and a way to hide the button per site.
+- [ ] Chat: stream answers instead of waiting for the full reply.
+- [ ] Delete items from the history.
 
 ### 4. Robustness
 
@@ -51,7 +60,8 @@ High priority: much of the to-do list for people working with tickets and PRs li
   - if the list markup changes, fall back to capturing Gmail's internal `/sync/u/N/i/bv` responses;
   - page beyond 50 results.
 - [ ] **DeepSeek in thinking mode:** check how it handles `reasoning_content` sent back between tool calls.
-- [ ] **Scheduled briefs:** show progress (today only a badge appears when done) and keep an error log.
+- [ ] **Scheduled briefs:** keep an error log (today the popup only shows the last error).
+- [ ] **Offscreen Gmail:** queue across agents, so a chat and a brief running at once don't close each other's Gmail document.
 - [ ] **Context size:** summarize large tool results before sending them back to the model.
 - [ ] **Firefox:** MV3 with `background.scripts`; there is no `offscreen` API there.
 

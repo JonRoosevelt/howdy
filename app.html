@@ -3,49 +3,54 @@
 <head>
   <meta charset="utf-8">
   <title>Howdy</title>
+  <link rel="stylesheet" href="theme.css">
   <style>
-    body { font: 15px/1.5 system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #222; }
-    nav button { font: inherit; border: 0; background: none; padding: .4rem .8rem; cursor: pointer; border-radius: 6px; }
-    nav button.on { background: #eee; }
+    body { width: 380px; padding: 16px 18px 20px; font-size: 15px; line-height: 1.45; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    header .logo { font-size: 24px; }
+    nav { display: flex; gap: 4px; }
+    nav button { font: 600 13px var(--font); border: 0; background: none; color: var(--ink-2); padding: 4px 11px; border-radius: 99px; cursor: pointer; }
+    nav button.on { background: var(--ink); color: var(--paper); }
     section { display: none; } section.on { display: block; }
-    .out { white-space: pre-wrap; } .out h1, .out h2, .out h3 { margin: .8rem 0 0; }
-    .muted { color: #888; font-size: .85rem; }
-    label { display: block; margin: .6rem 0; } input, select, textarea { font: inherit; width: 100%; box-sizing: border-box; }
-    .msg { padding: .5rem .8rem; border-radius: 8px; margin: .5rem 0; } .user { background: #eef4ff; } .assistant { background: #f6f6f6; }
-    code { background: #f2f2f2; padding: 0 .3rem; }
-    .item { border: 1px solid #eee; border-radius: 10px; padding: .7rem 1rem; margin: .6rem 0; }
-    .item h4 { margin: .3rem 0; } .item p { margin: .2rem 0; } .item a { color: inherit; }
-    .pill { font-size: .75rem; padding: .1rem .5rem; border-radius: 99px; border: 1px solid #6b5bd6; color: #6b5bd6; }
-    .pill.active { background: #6b5bd6; color: #fff; }
-    .cta { margin-left: .5rem; border-radius: 99px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+    h3 { font: italic 700 18px var(--font); margin: 20px 0 6px; }
+    .make { width: 100%; padding: 14px; font-size: 17px; }
+    .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .row .btn { padding: 8px 16px; }
+    .muted { font-size: 13px; }
+    label { display: block; margin: 8px 0; font-size: 14px; color: var(--ink-2); }
+    input, select, textarea { width: 100%; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 7px 10px; font-size: 14px; color: var(--ink); }
+    input:focus, select:focus, textarea:focus, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--blue); box-shadow: 3px 3px 0 var(--pink); }
+    #report-extra { margin-top: 8px; resize: none; }
+    #job:empty { display: none; } #job { margin: 10px 0 0; font-style: italic; color: var(--pink-ink); }
+    #history { list-style: none; margin: 0; padding: 0; }
+    #history li { display: grid; grid-template-columns: 26px 1fr auto; gap: 12px; align-items: center; padding: 8px 4px; border-top: 1.5px dashed var(--line); cursor: pointer; border-radius: 8px; }
+    #history li:hover { background: var(--pink-wash); }
+    #history .kind { width: 24px; height: 24px; border-radius: 50%; background: var(--blue); }
+    #history .brief .kind { border-radius: 0 60% 0 60%; background: var(--pink); }
+    #history .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #history .muted { font-style: italic; font-size: 12px; }
+    #settings h3:first-child { margin-top: 4px; }
+    #settings button:not(.btn) { border: 1.5px solid var(--ink-3); background: none; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    #settings button:not(.btn):hover { border-color: var(--blue); color: var(--blue); }
   </style>
 </head>
 <body>
-  <nav>
-    <button data-tab="brief" class="on">Brief</button>
-    <button data-tab="report">Reports</button>
-    <button data-tab="chat">Chat</button>
-    <button data-tab="settings">Settings</button>
-  </nav>
+  <header>
+    <span class="logo">Howdy</span>
+    <nav><button data-tab="home" class="on">Home</button><button data-tab="settings">Settings</button></nav>
+  </header>
 
-  <section id="brief" class="on">
-    <p><button id="brief-go">Generate now</button> <span class="muted" id="brief-at"></span></p>
-    <div class="out" id="brief-out"></div>
-  </section>
-
-  <section id="report">
-    <label>Period
-      <select id="report-days"><option value="1">Last day</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
-    </label>
-    <label>Focus (optional)<textarea id="report-extra" rows="2" placeholder="e.g. only project X, formatted for a 1:1 with my manager"></textarea></label>
-    <p><button id="report-go">Generate report</button> <span class="muted" id="report-at"></span></p>
-    <div class="out" id="report-out"></div>
-  </section>
-
-  <section id="chat">
-    <div id="chat-log"></div>
-    <p class="muted" id="chat-status"></p>
-    <form id="chat-form"><input id="q" placeholder="Ask about your day, email, Slack, what you read..." autocomplete="off"></form>
+  <section id="home" class="on">
+    <button class="btn make" id="brief-go">Pick my Morning Brief</button>
+    <div class="row">
+      <select id="report-days" style="width: auto"><option value="1">Last day</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+      <button class="btn out" id="report-go">Report</button>
+    </div>
+    <textarea id="report-extra" rows="2" placeholder="Focus (optional), e.g. only project X, for a 1:1 with my manager"></textarea>
+    <p class="muted" id="job"></p>
+    <h3>Recently picked</h3>
+    <ul id="history"></ul>
+    <p class="muted" id="empty">Nothing yet. Generated briefs and reports show up here and open in a new tab.</p>
   </section>
 
   <section id="settings">
@@ -74,7 +79,7 @@
       <label>Workspace <select name="slackTeam" id="slack-team"></select></label>
       <h3>Brief</h3>
       <label>Morning Brief hour <input name="briefHour" type="number" min="0" max="23"></label>
-      <p><button>Save</button> <span class="muted" id="saved"></span></p>
+      <p><button class="btn">Save</button> <span class="muted" id="saved"></span></p>
     </form>
   </section>
 

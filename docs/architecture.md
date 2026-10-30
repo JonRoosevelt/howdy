@@ -5,13 +5,18 @@
 | File | Role |
 |---|---|
 | `manifest.json` | Permissions, content scripts, service worker |
-| `background.js` | Schedules the Morning Brief (`chrome.alarms`) and installs the header rules |
-| `lib.js` | Tools, agent loop (OpenAI and Anthropic APIs), prompts, brief/report generation |
+| `background.js` | Runs brief/report generation, schedules the Morning Brief (`chrome.alarms`), installs the header rules |
+| `lib.js` | Tools, agent loop (OpenAI and Anthropic APIs), prompts, generation, document history |
 | `google.js` | Calendar via `SAPISIDHASH`, Gmail via the offscreen document |
 | `gmail.html`, `gmail-offscreen.js` | Hidden page that hosts Gmail in an iframe |
 | `gmail-frame.js` | Runs inside the hidden Gmail: reads search results and threads |
 | `slack-session.js` | Picks up the Slack web session |
-| `app.html`, `app.js` | UI: Brief, Reports, Chat, Settings |
+| `app.html`, `app.js` | Popup: generate, history, settings |
+| `doc.html`, `doc.js` | Page for one brief or report, opened in a new tab |
+| `page.js` | Chat button and side panel; content script on every site, plain script on `doc.html` |
+| `chat.html`, `chat.js` | Chat UI inside the panel iframe |
+| `ui.js` | DOM and markdown helpers shared by the pages |
+| `theme.css`, `fonts/` | Colour tokens and shared styles for the extension pages; Fraunces (OFL 1.1) bundled as variable woff2, no remote fonts |
 | `check.js` | End-to-end check with Playwright and mocks |
 
 ## Agent
@@ -53,9 +58,23 @@ looking_ahead_blurb
 footer        { sources[] { name, url } }
 ```
 
-The page renders it with `textContent`, so text from email or Slack cannot inject HTML. Links render only for `https://` URLs. `cta_prompt` and `prep_prompt` become buttons that open the chat with that prompt.
+The page renders it with `textContent`, so text from email or Slack cannot inject HTML. Links render only for `https://` URLs. `cta_prompt` and `prep_prompt` become buttons that open the chat panel with that prompt.
 
-Reports and chat use the same tools with markdown output. A small renderer escapes HTML first, then allows headings, bold text and `https` links.
+Reports and chat use the same tools with markdown output. A small renderer escapes HTML first, then allows headings, lists, bold text, inline code and `https` links.
+
+## Documents and history
+
+Every brief and report is saved by `saveDoc()` in `chrome.storage.local` under `docs` (newest 60), as `{ id, kind, at, title, text, json?, days?, painting, done? }`, and opened as `doc.html?id=<id>`. The popup lists them. `painting` comes from The Met's open-access API (Drawings and Prints, public-domain botanical studies, top 50 hits), picked by day, skipping hits without an image; `doc.html` prints it in blue over pink with CSS blend modes. If the API fails the hero falls back to a CSS-only arch. Checked to-dos are stored in `done`.
+
+Generation runs in the service worker, not the popup, because the popup closes when it loses focus. Progress goes to `chrome.storage.session` under `job`, which the popup shows; a job older than 15 minutes counts as abandoned.
+
+## Chat panel
+
+`page.js` adds a button in a shadow root on every `http(s)` page. On first click it creates an iframe of `chat.html` (a web-accessible resource) in a panel on the right. Before each question, `chat.js` asks its parent for `{ url, title, text }` with `postMessage`, and puts the first 15k characters into the system prompt as data.
+
+The chat gets one extra tool, `create_report({ title, markdown })`, which saves a report to the history and opens it in a new tab.
+
+A web page can post messages to the iframe too, so the only message it can usefully send is the page context, which is page content anyway. Prompts (`ask`) are accepted only from Howdy's own origin, which is how the brief page's buttons drive the chat; a site cannot make the agent run.
 
 ## Sessions instead of OAuth
 
@@ -75,7 +94,7 @@ A `declarativeNetRequest` session rule sets `Origin` and `Referer` to `https://c
 - **Search:** `gmail-frame.js` is a `MAIN`-world content script that captures the nonce at `document_start`. It waits for the results list and reads each row (`tr.zA`: sender `[email]`, subject `.bog`, snippet `.y2`, date `.xW [title]`, unread `.zE`, thread id `data-legacy-thread-id`), then posts the rows to the parent page with `postMessage`.
 - **Threads:** the frame fetches Gmail's print view (`?ik=<GLOBALS[9]>&view=pt&permthid=thread-f:<id>`) same-origin and returns the text.
 
-Calls share one offscreen document, so they run one at a time. The document closes when the agent finishes.
+Calls share one offscreen document, so they run one at a time. The document closes when the agent finishes. Two agents at once (say, a scheduled brief and a chat) share it too, and whichever finishes first closes it.
 
 ## Scheduling
 
@@ -85,4 +104,5 @@ Calls share one offscreen document, so they run one at a time. The document clos
 
 - The `cookies` permission on `*.google.com` gives access as broad as the signed-in Google account, not only read access to Gmail and Calendar.
 - The LLM API key and the Slack `xoxc` token are stored unencrypted in `chrome.storage.local`.
-- Tools are read-only. Source content is untrusted, and the prompts tell the model to treat it as data, not instructions.
+- Tools are read-only, except `create_report` in the chat, which only writes to the local history. Source content and page content are untrusted, and the prompts tell the model to treat them as data, not instructions.
+- The chat content script runs on every `http(s)` site, so the extension asks for access to all sites at install.

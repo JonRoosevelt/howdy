@@ -1,0 +1,37 @@
+@font-face { font-family: 'Fraunces'; src: url(fonts/Fraunces.woff2) format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Fraunces'; src: url(fonts/Fraunces-Italic.woff2) format('woff2'); font-weight: 100 900; font-style: italic; font-display: swap; }
+
+:root {
+  color-scheme: light dark;
+  --paper: light-dark(#FBFAF6, #10143A);
+  --paper-2: light-dark(#F1EFF7, #181D4D);
+  --ink: light-dark(#1E2A78, #F4F0E6);
+  --ink-2: light-dark(#3D4785, #C9CBE6);
+  --ink-3: light-dark(#5C6496, #9EA3CF);
+  --line: light-dark(#1E2A7833, #F4F0E633);
+  --blue: light-dark(#2340B8, #8FA2FF);
+  --on-blue: light-dark(#FBFAF6, #10143A);
+  --pink: #FF5C9D;
+  --on-pink: #141A50;
+  --pink-ink: light-dark(#B0175A, #FF8DBD);
+  --pink-wash: light-dark(#FFE1EC, #3A1D45);
+  --error: light-dark(#B3261E, #FF9A8F);
+  --font: 'Fraunces', Georgia, serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--font); font-variation-settings: 'SOFT' 100; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline wavy var(--pink); text-underline-offset: 4px; }
+:focus-visible { outline: 2px dashed var(--pink-ink); outline-offset: 3px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.logo { font: italic 800 26px/1 var(--font); font-variation-settings: 'SOFT' 100, 'WONK' 1; color: var(--blue); text-shadow: 2px 1.5px 0 var(--pink); }
+.btn { font: 700 15px/1 var(--font); font-variation-settings: 'SOFT' 100; border: 2px solid var(--blue); background: var(--blue); color: var(--on-blue); padding: 11px 18px; border-radius: 99px; cursor: pointer; white-space: nowrap; transition: translate .15s, box-shadow .15s; }
+.btn:hover:not(:disabled) { translate: -2px -2px; box-shadow: 4px 4px 0 var(--pink); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.out { background: none; color: var(--blue); }
+.tag { font: 600 13px/1 var(--font); padding: 6px 11px; border-radius: 99px; border: 1.5px solid var(--ink-3); color: var(--ink-2); }
+.tag.active { background: var(--pink); border-color: var(--pink); color: var(--on-pink); }
+.muted { color: var(--ink-3); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
