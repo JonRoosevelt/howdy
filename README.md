@@ -1,12 +1,12 @@
 # Howdy
 
-Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack, Jira and browser history. A browser extension for Chromium browsers that works with your own LLM.
+Morning Brief, Reports and Chat over your Google Calendar, Gmail, Slack, Jira, Notion and browser history. A browser extension for Chromium browsers that works with your own LLM.
 
 <p align="center"><img src="docs/images/brief.png" alt="A Morning Brief page: greeting, to-dos, updates, the day's agenda and a botanical print of the day" width="720"></p>
 
 ## Install
 
-Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google, Slack and Jira sessions.
+Works in Chromium browsers with developer mode (Chrome, Arc, Edge, Brave). No build step and no shared secrets: each person uses their own LLM key and their own Google, Slack, Jira and Notion sessions.
 
 1. Clone the repository:
    ```sh
@@ -42,6 +42,7 @@ The **Sources** tab lists each connector with its live status (signed in as whom
 - **Google (Calendar + Gmail):** uses the Google account signed in to the browser. With several accounts, enter the N from `mail.google.com/mail/u/N`. **Test Gmail** also checks Gmail, which is slower.
 - **Slack:** click **Connect** to open Slack on the web. If you are already signed in, Howdy picks up the session on its own. Pick the workspace. If the session expires, click **Reconnect**.
 - **Jira (Cloud):** Howdy suggests the `*.atlassian.net` sites from your browser history. Pick or type yours; you only need to be signed in to it.
+- **Notion:** sign in to notion.so in this browser (**Open** takes you there). With several workspaces or accounts, pick the one to read; the card shows who is signed in on which workspace.
 - **Browser history:** always on, read locally.
 
 ## Use
@@ -70,7 +71,7 @@ The **Sources** tab lists each connector with its live status (signed in as whom
   </tr>
   <tr>
     <td><img src="docs/images/themes.png" alt="The theme picker in Settings, with Tokyo Night selected"></td>
-    <td><img src="docs/images/sources.png" alt="The Sources tab with live status for Google, Slack, Jira and browser history"></td>
+    <td><img src="docs/images/sources.png" alt="The Sources tab with live status for Google, Slack, Jira, Notion and browser history"></td>
   </tr>
   <tr>
     <td align="center">Color themes, kept across sessions</td>
@@ -106,7 +107,7 @@ npx playwright install chromium
 npm run check
 ```
 
-Loads the extension in Chromium with a mocked LLM, Slack, Jira, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, the chat panel on a regular site, and dragging the chat button (kept inside the window, remembered across pages, no panel opening after a drag).
+Loads the extension in Chromium with a mocked LLM, Slack, Jira, Notion, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, the chat panel on a regular site, and dragging the chat button (kept inside the window, remembered across pages, no panel opening after a drag).
 
 ## More
 

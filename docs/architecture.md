@@ -14,7 +14,7 @@
 | `slack-session.js` | Picks up the Slack web session |
 | `themes.js` | Color theme presets |
 | `theme.js` | Applies the saved theme on every Howdy page |
-| `app.html`, `app.js` | Popup: generate, history, settings |
+| `app.html`, `app.js` | Popup: generate and history (Home), connector status (Sources), LLM, brief hour and theme (Settings) |
 | `doc.html`, `doc.js` | Page for one brief or report, opened in a new tab |
 | `page.js` | Chat button and side panel; content script on every site, plain script on `doc.html` |
 | `chat.html`, `chat.js` | Chat UI inside the panel iframe |
@@ -42,6 +42,8 @@ Tools:
 | `read_slack_thread` | Full Slack thread |
 | `search_jira` | Jira issues by JQL |
 | `read_jira_issue` | Jira issue description and latest comments |
+| `search_notion` | Notion pages by text, or the most recently edited |
+| `read_notion_page` | A Notion page as text, by id or URL |
 | `search_history` | Local browser history |
 
 ## Morning Brief
@@ -73,6 +75,23 @@ Every brief and report is saved by `saveDoc()` in `chrome.storage.local` under `
 
 Generation runs in the service worker, not the popup, because the popup closes when it loses focus. Progress goes to `chrome.storage.session` under `job`, which the popup shows; a job older than 15 minutes counts as abandoned.
 
+## Sources tab
+
+The popup's Sources tab shows one card per connector. When the tab opens, each card runs a cheap check and shows who is signed in or the error:
+- Google: today's Calendar events. Gmail is checked only with **Test Gmail**, because it boots Gmail in the hidden frame.
+- Slack: `auth.test`.
+- Jira: `/rest/api/3/myself`.
+- Notion: `getSpaces`, which also fills the workspace picker (shown only with more than one).
+- Browser history: always on.
+
+Each card holds its own setting (Google account N, Slack workspace, Jira site, Notion workspace), saved on change into `settings` and re-checked. The Settings form merges into `settings` instead of replacing it, so it does not wipe those values.
+
+## Themes
+
+`themes.js` holds the presets: Riso Garden (the default, which follows the system light/dark mode through `light-dark()` in `theme.css`) and fixed-scheme palettes such as Tokyo Night, Catppuccin, Gruvbox, Nord and Flexoki Light. A preset is 7 colors mapped to the `theme.css` tokens; lines, washes and the riso duotone of the painting are derived from them.
+
+The picker in Settings stores `{ id, name, scheme, vars }` under `theme` in `chrome.storage.local` (`null` means Riso Garden). `theme.js`, a classic script in the `<head>` of every extension page, sets those variables on `<html>`. It also mirrors the theme to `localStorage`, read synchronously, so a page paints in the right theme without a flash. Open pages update live through `chrome.storage.onChanged`. `page.js` reads the same key to color the floating button and the panel edge on web pages.
+
 ## Chat panel
 
 `page.js` adds a button in a shadow root on every `http(s)` page. On first click it creates an iframe of `chat.html` (a web-accessible resource) in a panel on the right. Before each question, `chat.js` asks its parent for `{ url, title, text }` with `postMessage`, and puts the first 15k characters into the system prompt as data.
@@ -91,10 +110,19 @@ Every source reuses the session the user already has in the browser, so there is
 
 **Jira.** Jira Cloud sites are suggested from browser history (`*.atlassian.net` hosts, most visited first), or set in the Sources tab. Calls go to `https://<site>/rest/api/3/search/jql` and `/rest/api/3/issue/<key>` with `credentials: 'include'`, so the browser adds the Atlassian session cookie. Descriptions and comments come as Atlassian Document Format and are flattened to text.
 
+**Notion.** Uses the internal API the Notion web app itself calls, `https://www.notion.so/api/v3/<endpoint>` (POST, JSON), with `credentials: 'include'` so the browser adds the `token_v2` session cookie. Nothing is read from the cookie or stored.
+- `getSpaces` lists every signed-in account (keyed by user id) with its workspaces. The picked workspace (`settings.notionSpace`, default the first) decides the `x-notion-active-user-header`, which is how the web app chooses between several signed-in accounts.
+- `search` (`type: 'BlocksInSpace'`, `source: 'quick_find'`) finds pages; `sort: lastEdited` with an empty query lists recently edited pages for the brief.
+- `loadPageChunk` reads a page in chunks of 100 blocks (up to 5, following `cursor`). Blocks are walked from the page's `content` and flattened to markdown-ish text; child pages become links, not inlined.
+- Records come either as `{ value: { value, role } }` (current) or `{ value, role }` (older); `record()` accepts both.
+- A `declarativeNetRequest` rule (id 3, in `background.js`) sets `Origin` and `Referer` to `https://www.notion.so` on those calls, as the web app would send.
+
+Why not the public API (`api.notion.com`): it needs an integration token pasted in, and only sees pages explicitly shared with that integration, which breaks the zero-config rule. The internal API is undocumented and can change without notice, but it has kept these endpoint names for years (open-source readers such as `notion-client` still use `loadPageChunk`). If it breaks, the errors surface in the Sources card.
+
 **Google Calendar.** The extension:
 1. reads the `SAPISID` cookie with `chrome.cookies`;
 2. builds `Authorization: SAPISIDHASH <ts>_<sha1(ts + " " + SAPISID + " https://calendar.google.com")>`;
-3. calls `https://clients6.google.com/calendar/v3/calendars/primary/events` with the browser API key that Calendar on the web uses. No key is bundled: candidates are read from the user's own `calendar.google.com/calendar/u/N/r` page, each is tried, and the one that works is cached in `chrome.storage.local`. If the cached key stops working, discovery runs again.
+3. calls `https://clients6.google.com/calendar/v3/calendars/primary/events` with the browser API key that Calendar on the web uses. No key is bundled: candidates are read from the user's own `calendar.google.com/calendar/u/N/r` page, each is tried, and the one that works is cached in `chrome.storage.local`. If the cached key stops working, discovery runs again. On a real account only one of the page's 4 keys could list events. Do not send `X-Origin`: Google answers 400 "Origin doesn't match Host for XD3" (`check.js` asserts it is absent).
 
 A `declarativeNetRequest` session rule sets `Origin` and `Referer` to `https://calendar.google.com` on those requests, because `fetch` cannot set `Origin` itself. The `X-Goog-AuthUser` header picks the account.
 
@@ -112,7 +140,7 @@ Calls share one offscreen document, so they run one at a time. The document clos
 ## Security notes
 
 - The `cookies` permission on `*.google.com` gives access as broad as the signed-in Google account, not only read access to Gmail and Calendar.
-- Host access to `*.atlassian.net` lets the extension act as the signed-in Jira user; the tools only read.
+- Host access to `*.atlassian.net` and `www.notion.so` lets the extension act as the signed-in Jira and Notion user; the tools only read.
 - The LLM API key and the Slack `xoxc` token are stored unencrypted in `chrome.storage.local`.
 - Tools are read-only, except `create_report` in the chat, which only writes to the local history. Source content and page content are untrusted, and the prompts tell the model to treat them as data, not instructions.
 - The chat content script runs on every `http(s)` site, so the extension asks for access to all sites at install.

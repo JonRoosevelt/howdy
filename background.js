@@ -2,6 +2,23 @@ import { setupGoogleHeaders } from './google.js';
 import { docs, generate, openDoc, settings } from './lib.js';
 
 setupGoogleHeaders();
+// Notion's web app only ever calls api/v3 from its own origin, so look like it rather than chrome-extension://.
+chrome.declarativeNetRequest.updateSessionRules({
+  removeRuleIds: [3],
+  addRules: [
+    {
+      id: 3,
+      action: {
+        type: 'modifyHeaders',
+        requestHeaders: [
+          { header: 'origin', operation: 'set', value: 'https://www.notion.so' },
+          { header: 'referer', operation: 'set', value: 'https://www.notion.so/' },
+        ],
+      },
+      condition: { urlFilter: '|https://www.notion.so/api/v3/', initiatorDomains: [chrome.runtime.id] },
+    },
+  ],
+});
 
 async function briefAt() {
   const { briefHour } = await settings();

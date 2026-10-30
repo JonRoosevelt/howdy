@@ -1,5 +1,5 @@
 import { calendarEvents, closeGmail, searchGmail } from './google.js';
-import { docs, get, jira, jiraSites, openDoc, set, settings, slack } from './lib.js';
+import { docs, get, jira, jiraSites, notion, openDoc, set, settings, slack } from './lib.js';
 import { swatch, THEMES } from './themes.js';
 import { $, el, when } from './ui.js';
 
@@ -10,7 +10,7 @@ function tab(name) {
   $(`#${name}`).classList.add('on');
   if (name === 'sources' && !checked) {
     checked = true;
-    ['google', 'slack', 'jira'].forEach((s) => check(s));
+    ['google', 'slack', 'jira', 'notion'].forEach((s) => check(s));
   }
 }
 document.querySelectorAll('nav button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
@@ -78,6 +78,13 @@ const CHECKS = {
     const me = await jira('/rest/api/3/myself');
     return `Signed in as ${me.displayName} on ${me.site}`;
   },
+  async notion() {
+    const { space, spaces } = await notion();
+    $('#notion-space').hidden = spaces.length < 2;
+    $('#notion-space').replaceChildren(...spaces.map((s) => el('option', { value: s.id, textContent: `${s.name} (${s.user})` })));
+    $('#notion-space').value = space.id;
+    return `Signed in as ${space.user} on ${space.name}`;
+  },
 };
 
 async function check(source, ...args) {
@@ -103,6 +110,7 @@ async function renderSlackTeams() {
 }
 await renderSlackTeams();
 $('#slack-connect').onclick = () => chrome.tabs.create({ url: 'https://app.slack.com/client' });
+$('#notion-open').onclick = () => chrome.tabs.create({ url: 'https://www.notion.so' });
 $('#gmail-test').onclick = () => check('google', true);
 
 const sites = await jiraSites();

@@ -21,19 +21,36 @@
 - [x] Chat button on every page, with a side panel that uses the open page as context
 - [x] Reports created from the chat open as pages
 - [x] To-dos can be checked off
+- [x] Riso Garden visual identity: Fraunces, ink blue and pink, botanical print in a riso duotone
+- [x] Chat answers from the open page first and renders markdown (tables, lists, headings)
+- [x] Faster briefs: Gmail threads read through the print view in parallel, tool and model timeouts, step timing logs
+
+## Done (v0.3)
+
+- [x] **Jira:** `search_jira` (JQL) and `read_jira_issue` over the browser session; site suggested from browser history
+- [x] **Sources tab:** one card per connector with live status and its own setting
+- [x] **Color themes:** preset picker in Settings, kept across sessions, applied to every page, the chat and the floating button
+- [x] **Calendar fix:** stopped sending `X-Origin`, which Google rejected with a 400
+- [x] **Notion:** `search_notion` and `read_notion_page` over the browser session (internal `api/v3`), workspace picker and live status in Sources
 
 ## Next
+
+### 0. To verify on a real account
+
+- [ ] Jira with a real session: the Sources card shows the name, and JQL search works (only tested with mocks so far).
+- [ ] Morning Brief timing: read the `[howdy Ns] step ...` logs in the service worker console and cut the slowest steps.
+- [x] Notion with a real session: the card shows the name and workspace, `search` (including empty query + `lastEdited` sort) and `loadPageChunk` answer with the shapes mocked in `check.js`, and the Origin rule is enough (or not needed).
+- [ ] Theme palettes: check the hex values against the original themes (Matte Black especially was approximated).
+
 
 ### 1. More sources
 
 High priority: much of the to-do list for people working with tickets and PRs lives here. Reuse the browser session wherever possible.
 
 - [ ] **GitHub:** a `github_search(url)` tool that reads a GitHub URL, fetching `github.com/pulls/review-requested`, `github.com/pulls` and `github.com/notifications` with cookies.
-- [x] **Jira:** `search_jira` (JQL) and `read_jira_issue` with session cookies; site discovered from browser history.
 - [ ] **Confluence:** CQL search with the same session.
-- [x] **Color themes:** preset picker in Settings, kept in `chrome.storage.local` and mirrored to `localStorage` for a flash-free first paint.
 - [ ] **Per-source toggle** in Sources, to leave a connected source out of briefs.
-- [ ] **Notion:** the internal `www.notion.so/api/v3/search` with the `token_v2` cookie, or the public API with an integration. Evaluate how stable each is.
+- [ ] **Notion inbox:** mentions and comments addressed to me (the web app's notifications endpoint), for brief to-dos. Database rows (`queryCollection`) for task boards.
 - [ ] **Linear:** GraphQL on `api.linear.app` with the session; a `list_linear_notifications` tool for the inbox.
 - [ ] **`list_recent_people`:** combine Gmail senders, meeting attendees and Slack DMs to map who the user works with most, and use it to scope the other searches.
 
@@ -54,6 +71,8 @@ High priority: much of the to-do list for people working with tickets and PRs li
 - [ ] Chat: keep the conversation when navigating or switching tabs (today each page starts fresh), a keyboard shortcut, a way to move the button with the keyboard, and a way to hide the button per site.
 - [ ] Chat: stream answers instead of waiting for the full reply.
 - [ ] Delete items from the history.
+- [ ] Riso Garden with a fixed light or dark mode, not only following the system.
+- [ ] Optional Unsplash photo instead of The Met painting; needs each user's own Unsplash API key.
 
 ### 4. Robustness
 

@@ -129,6 +129,53 @@ try {
     const doc = (text) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] });
     r.fulfill({ json: { fields: { summary: 'Fix checkout', description: doc('Cart total is wrong.'), comment: { comments: [{ author: { displayName: 'Bo' }, body: doc('On it') }] } } } });
   });
+  const notionCalls = [];
+  const PAGE = '01234567-89ab-cdef-0123-456789abcdef';
+  const blk = (id, type, title, extra) => ({ value: { value: { id, type, properties: title && { title: [[title]] }, ...extra } } });
+  await ctx.route('https://www.notion.so/api/v3/**', (r) => {
+    const endpoint = new URL(r.request().url()).pathname.split('/').at(-1);
+    const body = r.request().postDataJSON();
+    notionCalls.push({ endpoint, body, user: r.request().headers()['x-notion-active-user-header'] });
+    if (endpoint === 'getSpaces')
+      return r.fulfill({
+        json: {
+          U1: { notion_user: { U1: { value: { value: { id: 'U1', name: 'Ana' } } } }, space: { S1: { value: { value: { id: 'S1', name: 'Acme Wiki' } } } } },
+          // The pre-2024 record shape, without the inner value.
+          U2: { notion_user: { U2: { value: { id: 'U2', email: 'ana@side.dev' } } }, space: { S2: { value: { id: 'S2', name: 'Side project' } } } },
+        },
+      });
+    if (endpoint === 'search')
+      return r.fulfill({
+        json: { results: [{ id: PAGE, highlight: { pathText: 'Projects', text: 'checkout plan' } }], recordMap: { block: { [PAGE]: blk(PAGE, 'page', 'Checkout plan', { last_edited_time: 1761800000000 }) } } },
+      });
+    if (body.chunkNumber === 0)
+      return r.fulfill({
+        json: {
+          cursor: { stack: [[{ table: 'block', id: 'b3', index: 0 }]] },
+          recordMap: {
+            block: {
+              [PAGE]: blk(PAGE, 'page', 'Checkout plan', { content: ['b1', 'b2', 'b3', 'b4', 'b5'] }),
+              b1: blk('b1', 'header', 'Goals'),
+              b2: { value: { value: { id: 'b2', type: 'to_do', properties: { title: [['Ship by '], ['‣', [['d', { start_date: '2026-11-03' }]]]], checked: [['Yes']] } } } },
+            },
+          },
+        },
+      });
+    r.fulfill({
+      json: {
+        cursor: { stack: [] },
+        recordMap: {
+          block: {
+            b3: blk('b3', 'bulleted_list', 'Fix totals', { content: ['b6'] }),
+            b4: blk('b4', 'page', 'Old notes', { content: ['b7'] }),
+            b5: blk('b5', 'text', 'gone', { alive: false }),
+            b6: blk('b6', 'text', 'with Bo'),
+            b7: blk('b7', 'text', 'child page body'),
+          },
+        },
+      },
+    });
+  });
   await page.click('nav [data-tab=sources]');
   const state = (s) => page.getAttribute(`[data-source=${s}]`, 'data-state');
   await page.waitForFunction(() => [...document.querySelectorAll('[data-source]')].every((r) => r.dataset.state && r.dataset.state !== 'checking'));
@@ -145,6 +192,28 @@ try {
   const issue = await page.evaluate(() => import('./lib.js').then((m) => m.TOOLS.read_jira_issue.run({ key: 'WEB-7' })).then((r) => JSON.parse(JSON.stringify(r))));;
   assert.equal(issue.description, 'Cart total is wrong.\n');
   assert.deepEqual(issue.comments, [{ from: 'Bo', text: 'On it\n' }]);
+  assert.equal(await page.textContent('[data-source=notion] .status'), 'Signed in as Ana on Acme Wiki');
+  await page.selectOption('#notion-space', 'S2');
+  await page.waitForFunction(() => document.querySelector('[data-source=notion] .status').textContent.includes('Side project'));
+  assert.equal(await page.textContent('[data-source=notion] .status'), 'Signed in as ana@side.dev on Side project');
+  const pages = await page.evaluate(() => import('./lib.js').then((m) => m.TOOLS.search_notion.run({ query: 'checkout' })));
+  assert.deepEqual(pages[0], {
+    id: PAGE,
+    title: 'Checkout plan',
+    path: 'Projects',
+    match: 'checkout plan',
+    edited: new Date(1761800000000).toISOString(),
+    workspace: 'Side project',
+    url: 'https://www.notion.so/0123456789abcdef0123456789abcdef',
+  });
+  assert.equal(notionCalls.at(-1).user, 'U2', 'calls go out as the account that owns the picked workspace');
+  assert.equal(notionCalls.at(-1).body.spaceId, 'S2');
+  const notionPage = await page.evaluate(() =>
+    import('./lib.js').then((m) => m.TOOLS.read_notion_page.run({ page: 'https://www.notion.so/acme/Add-cafe-0123456789abcdef0123456789abcdef?pvs=4' })),
+  );
+  assert.equal(notionPage.title, 'Checkout plan');
+  assert.equal(notionPage.text, '# Goals\n[x] Ship by 2026-11-03\n- Fix totals\n  with Bo\n[page: Old notes](https://www.notion.so/b4)');
+  assert.deepEqual(notionCalls.filter((c) => c.endpoint === 'loadPageChunk').map((c) => [c.body.pageId, c.body.chunkNumber]), [[PAGE, 0], [PAGE, 1]]);
   await page.click('#gmail-test');
   await page.waitForFunction(() => document.querySelector('[data-source=google]').dataset.state === 'ok');
   assert.equal(await page.textContent('[data-source=google] .status'), 'Calendar ok, 1 event today. Gmail ok, 1 thread');

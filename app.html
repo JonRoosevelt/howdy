@@ -92,6 +92,11 @@
         <div><span class="name">Jira</span><span class="what">issues and comments</span><p class="status"></p></div>
         <div class="setup"><input data-setting="jiraSite" id="jira-site" list="jira-sites" placeholder="your-company.atlassian.net"><datalist id="jira-sites"></datalist><button type="button" class="chip" id="jira-open">Open</button></div>
       </li>
+      <li data-source="notion">
+        <span class="dot"></span>
+        <div><span class="name">Notion</span><span class="what">pages and docs</span><p class="status"></p></div>
+        <div class="setup"><select data-setting="notionSpace" id="notion-space" hidden></select><button type="button" class="chip" id="notion-open">Open</button></div>
+      </li>
       <li data-source="history" data-state="ok">
         <span class="dot"></span>
         <div><span class="name">Browser history</span><span class="what">where your attention went</span><p class="status">Always on. Stays on this device, except what the LLM reads.</p></div>

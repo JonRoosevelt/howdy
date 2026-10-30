@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Howdy",
   "version": "0.3.0",
-  "description": "Morning Brief, reports and chat over your calendar, inbox, Slack, Jira and browsing history. Bring your own LLM.",
+  "description": "Morning Brief, reports and chat over your calendar, inbox, Slack, Jira, Notion and browsing history. Bring your own LLM.",
   "icons": {
     "16": "icons/16.png",
     "32": "icons/32.png",
@@ -20,7 +20,8 @@
   "host_permissions": [
     "https://*.google.com/*",
     "https://*.slack.com/*",
-    "https://*.atlassian.net/*"
+    "https://*.atlassian.net/*",
+    "https://www.notion.so/*"
   ],
   "optional_host_permissions": [
     "*://*/*"
