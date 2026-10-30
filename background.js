@@ -24,7 +24,7 @@ async function run(kind, opts = {}, open = false) {
   const at = Date.now();
   await setJob({ kind, at });
   try {
-    const doc = await generate(kind, { ...opts, onTool: (tool) => setJob({ kind, at, tool }) });
+    const doc = await generate(kind, { ...opts, onProgress: (progress) => setJob({ kind, at, progress }) });
     await chrome.storage.session.remove('job');
     if (open) openDoc(doc.id);
     else chrome.action.setBadgeText({ text: '1' });

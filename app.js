@@ -30,10 +30,13 @@ async function renderJob() {
   const { job } = await chrome.storage.session.get('job');
   const running = job && !job.error;
   $('#brief-go').disabled = $('#report-go').disabled = running;
-  $('#job').textContent = !job ? '' : job.error ? `Error: ${job.error}` : `Writing your ${job.kind}${job.tool ? `: ${job.tool}` : ''}...`;
+  const secs = job && Math.round((Date.now() - job.at) / 1000);
+  const elapsed = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
+  $('#job').textContent = !job ? '' : job.error ? `Error: ${job.error}` : `Writing your ${job.kind}: ${job.progress ?? 'starting'}, ${elapsed}`;
 }
 
 await Promise.all([renderHistory(), renderJob()]);
+setInterval(renderJob, 1000);
 chrome.storage.onChanged.addListener((c, area) => {
   if (c.docs) renderHistory();
   if (area === 'session' && c.job) renderJob();

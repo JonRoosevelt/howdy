@@ -87,7 +87,39 @@ async function hiddenGmail(url) {
   const [path, hash = ''] = url.split('#');
   const r = await chrome.runtime.sendMessage({ target: 'gmail-offscreen', url: `${path}${sep}bd=${nonce}${hash && `#${hash}`}`, nonce });
   if (!r?.ok) throw new Error(r?.error ?? 'Gmail unavailable');
+  if (r.ik) iks.set(accountOf(url), r.ik);
   return r.result;
+}
+
+const iks = new Map();
+const accountOf = (url) => url.match(/\/mail\/u\/(\d+)/)?.[1];
+
+const htmlText = (html) =>
+  html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<br\s*\/?>|<\/(?:p|div|tr|li|h\d)>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/[ \t\u00a0]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .trim()
+    .slice(0, 12000);
+
+// With the ik token from an earlier search, a thread is one fetch of the print view instead of booting Gmail in the iframe.
+async function printView(u, threadId) {
+  const ik = iks.get(String(u));
+  if (!ik) return null;
+  const permthid = encodeURIComponent(`thread-f:${BigInt(`0x${threadId}`)}`);
+  const r = await fetch(`https://mail.google.com/mail/u/${u}/?ik=${ik}&view=pt&search=all&permthid=${permthid}`, { credentials: 'include' }).catch(
+    () => null,
+  );
+  if (!r?.ok || new URL(r.url).host !== 'mail.google.com') return null;
+  return htmlText(await r.text());
 }
 
 export const closeGmail = () => chrome.offscreen.closeDocument().catch(() => {});
@@ -99,8 +131,7 @@ export const searchGmail = (user, query, max) =>
     return threads.slice(0, max).map((t) => ({ ...t, url: `https://mail.google.com/mail/u/${user}/#all/${t.thread_id}` }));
   });
 
-export const readGmailThread = (user, threadId) =>
-  serial(async () => {
-    if (!/^[0-9a-f]+$/i.test(threadId)) throw new Error('Invalid thread_id');
-    return hiddenGmail(`https://mail.google.com/mail/u/${user}/?bdthread=${threadId}#inbox`);
-  });
+export async function readGmailThread(u, threadId) {
+  if (!/^[0-9a-f]+$/i.test(threadId)) throw new Error('Invalid thread_id');
+  return (await printView(u, threadId)) ?? serial(() => hiddenGmail(`https://mail.google.com/mail/u/${u}/?bdthread=${threadId}#inbox`));
+}

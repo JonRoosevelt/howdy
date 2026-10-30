@@ -2,6 +2,7 @@ import { calendarEvents, closeGmail, readGmailThread, searchGmail } from './goog
 
 const DAY = 864e5;
 const MAX_TOOL_CHARS = 20000;
+const LLM_TIMEOUT = 180e3;
 
 export const get = async (k) => (await chrome.storage.local.get(k))[k];
 export const set = (k, v) => chrome.storage.local.set({ [k]: v });
@@ -145,10 +146,14 @@ const TOOLS = {
 
 const schema = (t) => ({ type: 'object', properties: t.parameters, required: t.required ?? [] });
 
+const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error(`timed out after ${ms / 1000}s`)), ms));
+
 async function runTool(tools, { name, args }) {
   try {
     if (!tools[name]) throw new Error(`unknown tool ${name}`);
-    const out = JSON.stringify(await tools[name].run(typeof args === 'string' ? JSON.parse(args || '{}') : args ?? {}));
+    const input = typeof args === 'string' ? JSON.parse(args || '{}') : args ?? {};
+    // Gmail calls queue behind each other, so leave room for a few of them.
+    const out = JSON.stringify(await Promise.race([tools[name].run(input), timeout(120e3)]));
     return out.length > MAX_TOOL_CHARS ? `${out.slice(0, MAX_TOOL_CHARS)}...[truncated]` : out;
   } catch (e) {
     return `Error: ${e.message}`;
@@ -164,6 +169,7 @@ async function anthropicStep(s, system, messages, final, tools) {
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
+    signal: AbortSignal.timeout(LLM_TIMEOUT),
     body: JSON.stringify({
       model: s.model,
       max_tokens: 8192,
@@ -189,6 +195,7 @@ async function openaiStep(s, system, messages, final, tools) {
   const r = await api(`${s.baseUrl || 'https://api.openai.com/v1'}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...(s.apiKey && { authorization: `Bearer ${s.apiKey}` }) },
+    signal: AbortSignal.timeout(LLM_TIMEOUT),
     body: JSON.stringify({
       model: s.model,
       messages: [{ role: 'system', content: system }, ...messages],
@@ -205,17 +212,32 @@ async function openaiStep(s, system, messages, final, tools) {
   };
 }
 
-export async function agent(system, messages, onTool = () => {}, extraTools = {}, maxSteps = 25) {
+export async function agent(system, messages, onProgress = () => {}, extraTools = {}, maxSteps = 25) {
   const s = await settings();
   const tools = { ...TOOLS, ...extraTools };
   if (!s.model) throw new Error('Configure the LLM in Settings');
   messages = [...messages];
+  const started = Date.now();
+  const log = (msg) => console.info(`[howdy ${Math.round((Date.now() - started) / 1000)}s] ${msg}`);
   try {
-    for (let i = 0; i < maxSteps; i++) {
-      const step = await (s.provider === 'anthropic' ? anthropicStep : openaiStep)(s, system, messages, i === maxSteps - 1, tools);
+    for (let i = 1; i <= maxSteps; i++) {
+      onProgress(`thinking (step ${i})`);
+      let t = Date.now();
+      const step = await (s.provider === 'anthropic' ? anthropicStep : openaiStep)(s, system, messages, i === maxSteps, tools);
+      log(`step ${i}: model answered in ${Date.now() - t} ms with ${step.calls.length} tool calls`);
       if (!step.calls.length) return { text: step.text, messages };
-      step.calls.forEach((c) => onTool(c.name));
-      step.reply(await Promise.all(step.calls.map(async (c) => ({ id: c.id, output: await runTool(tools, c) }))));
+      onProgress(`reading ${[...new Set(step.calls.map((c) => c.name))].join(', ')} (step ${i})`);
+      t = Date.now();
+      const results = await Promise.all(
+        step.calls.map(async (c) => {
+          const t0 = Date.now();
+          const output = await runTool(tools, c);
+          log(`step ${i}: ${c.name} took ${Date.now() - t0} ms, ${output.length} chars${output.startsWith('Error') ? `, ${output.slice(0, 120)}` : ''}`);
+          return { id: c.id, output };
+        }),
+      );
+      log(`step ${i}: tools took ${Date.now() - t} ms`);
+      step.reply(results);
     }
     throw new Error('The model did not finish within the step limit');
   } finally {
@@ -252,7 +274,7 @@ Rules: plain text only (no markdown, HTML or em dashes). Every item has label, s
   report: `You are my chief of staff. Write a report for the requested period in markdown: main themes, decisions, open (verified) pending items, the people I interacted with most, and where my attention went (browser history). Research with the tools before writing. Use [text](url) links that come from the tools.
 ${RULES}`,
 
-  chat: `You are my chief of staff with access to my tools. Answer by researching with the tools; do not make things up. Use [text](url) links that come from the tools. Answer in markdown, directly.
+  chat: `You are my chief of staff. I usually ask about the page I have open, which you get below: answer from it first. Call tools only when the page does not hold the answer or I ask about my calendar, email, Slack or browsing history. Never make things up. Use [text](url) links that come from the page or the tools. Answer in markdown (headings, lists, tables, bold, links), short and direct.
 When I ask for a report, document or page, research first, then save it with create_report and tell me it opened in a new tab.
 ${RULES}`,
 };
@@ -295,9 +317,9 @@ export async function saveDoc(doc) {
 
 export const openDoc = (id) => chrome.tabs.create({ url: chrome.runtime.getURL(`doc.html?id=${id}`) });
 
-export async function generate(kind, { days = 7, extra = '', onTool } = {}) {
+export async function generate(kind, { days = 7, extra = '', onProgress } = {}) {
   const ask = kind === 'brief' ? 'Prepare my Morning Brief.' : `Write a report for the last ${days} days. ${extra}`;
-  const { text } = await agent(`${PROMPTS[kind]}\n\nNow: ${new Date().toString()}`, [{ role: 'user', content: ask }], onTool);
+  const { text } = await agent(`${PROMPTS[kind]}\n\nNow: ${new Date().toString()}`, [{ role: 'user', content: ask }], onProgress);
   if (kind === 'brief') return saveDoc({ kind, title: 'Morning Brief', text, json: parseJson(text) });
   return saveDoc({ kind, title: text.match(/^# (.+)$/m)?.[1] ?? `Last ${days} days`, text, days });
 }

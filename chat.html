@@ -13,11 +13,16 @@
     header button:hover { background: var(--pink-wash); color: var(--ink); }
     #log { flex: 1; overflow-y: auto; padding: 6px 18px 18px; }
     #log:empty::before { content: 'Ask about this page, your day, your email or Slack. Ask for a report and it opens as a page in a new tab.'; font-style: italic; color: var(--ink-3); }
-    .msg { white-space: pre-wrap; margin: 0 0 16px; overflow-wrap: anywhere; }
+    .msg { margin: 0 0 16px; overflow-wrap: anywhere; }
+    .msg p, .msg ul, .msg ol, .msg table { margin: 0 0 .6em; } .msg > :last-child { margin-bottom: 0; }
+    .msg ul, .msg ol { padding-left: 1.2em; }
+    .msg table { border-collapse: collapse; font-size: 13px; display: block; overflow-x: auto; }
+    .msg th, .msg td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+    .msg th { background: var(--paper-2); }
+    .msg hr { border: 0; border-top: 1px dashed var(--ink-3); margin: 1em 0; }
     .msg.user { background: var(--blue); color: var(--on-blue); padding: 10px 15px; border-radius: 20px 20px 4px 20px; margin-left: 3rem; }
     .msg.error { color: var(--error); }
-    .msg h1, .msg h2, .msg h3 { font: italic 700 18px/1.3 var(--font); margin: .6em 0 .2em; white-space: normal; }
-    .msg li { margin-left: 1.1em; }
+    .msg h1, .msg h2, .msg h3 { font: italic 700 18px/1.3 var(--font); margin: .6em 0 .2em; }
     .msg code { font: 13px ui-monospace, Menlo, monospace; background: var(--paper-2); padding: 0 4px; border-radius: 4px; }
     .msg a { text-decoration: underline wavy var(--pink); text-underline-offset: 3px; }
     #status { margin: 0; padding: 0 18px 8px; font: italic 14px var(--font); color: var(--pink-ink); min-height: 1.5em; }

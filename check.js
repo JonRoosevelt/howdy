@@ -98,7 +98,9 @@ try {
     calendarHeaders = r.request().headers();
     r.fulfill({ json: { items: [{ summary: 'Standup', start: { dateTime: '2026-10-29T09:00:00Z' } }] } });
   });
+  const mailUrls = [];
   await ctx.route('https://mail.google.com/**', (r) =>
+    mailUrls.push(r.request().url()) &&
     r.fulfill({
       contentType: 'text/html',
       body: r.request().url().includes('view=pt')
@@ -124,6 +126,8 @@ try {
   assert.equal(await page.evaluate(() => chrome.storage.local.get('calendarKey').then((r) => r.calendarKey)), goodKey);
   const thread = await page.evaluate(() => import('./google.js').then((m) => m.readGmailThread(0, '18abc')));
   assert.equal(thread, 'Ana Can you review the contract?');
+  assert.ok(!mailUrls.some((u) => u.includes('bdthread')), 'with a known ik, threads are read without booting Gmail');
+  assert.ok(mailUrls.some((u) => u.includes('ik=ik1&view=pt')));
   const threads = await page.evaluate(() => import('./google.js').then((m) => m.searchGmail(0, 'in:inbox', 5)));
   assert.deepEqual(threads[0], {
     thread_id: '18abc',

@@ -44,7 +44,7 @@
         const r = results();
         if (!r) return;
         clearInterval(poll);
-        reply({ result: r });
+        reply({ result: r, ik: window.GLOBALS?.[9] });
       }
     } catch (e) {
       clearInterval(poll);

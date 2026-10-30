@@ -25,7 +25,7 @@
 - OpenAI-compatible `/chat/completions` with `tools` / `tool_calls`;
 - Anthropic `/v1/messages` with `tool_use` / `tool_result`.
 
-Tool calls in one step run in parallel. The loop stops when the model answers without tool calls, and the last step forces `tool_choice: none`, so it always ends with an answer. Tool output is capped at 20k characters.
+Tool calls in one step run in parallel. Each tool call times out after 120 s and each model request after 180 s. Every step logs its timings to the service worker console (`[howdy 42s] step 3: ...`). The loop stops when the model answers without tool calls, and the last step forces `tool_choice: none`, so it always ends with an answer. Tool output is capped at 20k characters.
 
 Tools:
 
@@ -92,7 +92,7 @@ A `declarativeNetRequest` session rule sets `Origin` and `Referer` to `https://c
 **Gmail.**
 - **Hidden Gmail:** `google.js` creates an offscreen document (`gmail.html`, reason `DOM_SCRAPING`). It loads `mail.google.com/mail/u/N/?bd=<nonce>#search/<query>` in an iframe. A second `declarativeNetRequest` rule strips `X-Frame-Options` and `Content-Security-Policy` from `mail.google.com` sub-frames, only for requests outside tabs (`tabId -1`), which means only extension contexts.
 - **Search:** `gmail-frame.js` is a `MAIN`-world content script that captures the nonce at `document_start`. It waits for the results list and reads each row (`tr.zA`: sender `[email]`, subject `.bog`, snippet `.y2`, date `.xW [title]`, unread `.zE`, thread id `data-legacy-thread-id`), then posts the rows to the parent page with `postMessage`.
-- **Threads:** the frame fetches Gmail's print view (`?ik=<GLOBALS[9]>&view=pt&permthid=thread-f:<id>`) same-origin and returns the text.
+- **Threads:** a search also returns Gmail's `ik` token (`GLOBALS[9]`), which is cached per account. With it, a thread is a single `fetch` of the print view (`?ik=<ik>&view=pt&permthid=thread-f:<id>`) with the session cookies, so threads read in parallel without booting Gmail. Without a cached `ik`, or if that fetch fails, the hidden frame loads Gmail and fetches the print view itself.
 
 Calls share one offscreen document, so they run one at a time. The document closes when the agent finishes. Two agents at once (say, a scheduled brief and a chat) share it too, and whichever finishes first closes it.
 
