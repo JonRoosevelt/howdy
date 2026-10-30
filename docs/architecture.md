@@ -5,6 +5,7 @@
 | File | Role |
 |---|---|
 | `manifest.json` | Permissions, content scripts, service worker |
+| `icons/` | Extension and toolbar icons (16, 32, 48, 128 px): a blue and a pink leaf overprinted like two riso inks |
 | `background.js` | Runs brief/report generation, schedules the Morning Brief (`chrome.alarms`), installs the header rules |
 | `lib.js` | Tools, agent loop (OpenAI and Anthropic APIs), prompts, generation, document history |
 | `google.js` | Calendar via `SAPISIDHASH`, Gmail via the offscreen document |
@@ -75,6 +76,8 @@ Generation runs in the service worker, not the popup, because the popup closes w
 ## Chat panel
 
 `page.js` adds a button in a shadow root on every `http(s)` page. On first click it creates an iframe of `chat.html` (a web-accessible resource) in a panel on the right. Before each question, `chat.js` asks its parent for `{ url, title, text }` with `postMessage`, and puts the first 15k characters into the system prompt as data.
+
+The button can be dragged anywhere. A drag that moves less than 5 px counts as a click; after a real drag the click that follows is ignored, but keyboard activation (`click` with `detail` 0) always opens the panel. The position is saved in `chrome.storage.local` under `chatButton` as `{ x, y }`, fractions of the free space inside the viewport, so CSS (`left: calc(8px + (100% - 66px) * x)`) keeps it on screen at any window size without a resize listener. Other open tabs follow through `chrome.storage.onChanged`.
 
 The chat gets one extra tool, `create_report({ title, markdown })`, which saves a report to the history and opens it in a new tab.
 

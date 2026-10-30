@@ -199,6 +199,34 @@ try {
   await ctx.route('https://news.example/**', (r) => r.fulfill({ contentType: 'text/html', body: '<h1>Rates cut</h1><p>The bank cut rates today.</p>' }));
   const site = await ctx.newPage();
   await site.goto('https://news.example/');
+  const fabAt = (p) => p.evaluate(() => {
+    const f = document.querySelector('howdy-chat').shadowRoot.querySelector('.fab');
+    return { x: f.offsetLeft, y: f.offsetTop, open: !!f.closest('.wrap.open') };
+  });
+  const dragFab = async (x, y) => {
+    const from = await fabAt(site);
+    await site.mouse.move(from.x + 25, from.y + 25);
+    await site.mouse.down();
+    await site.mouse.move(x, y, { steps: 5 });
+    await site.mouse.up();
+  };
+  await dragFab(5000, -5000);
+  assert.deepEqual(await fabAt(site), { x: 1280 - 58, y: 8, open: false }, 'a drag past the edge stays inside the viewport');
+  await dragFab(225, 175);
+  assert.deepEqual(await fabAt(site), { x: 200, y: 150, open: false }, 'a drag moves the button and does not open the panel');
+  const saved = await page.evaluate(() => chrome.storage.local.get('chatButton').then((r) => r.chatButton));
+  assert.ok(saved.x > 0 && saved.x < 1 && saved.y > 0 && saved.y < 1);
+  const other = await ctx.newPage();
+  await other.goto('https://news.example/other');
+  await other.waitForFunction(() => document.querySelector('howdy-chat')?.shadowRoot.querySelector('.fab.placed'));
+  assert.deepEqual(await fabAt(other), { x: 200, y: 150, open: false }, 'the position is shared across pages');
+  await other.setViewportSize({ width: 360, height: 240 });
+  const small = await fabAt(other);
+  assert.ok(small.x >= 8 && small.x <= 360 - 58 && small.y >= 8 && small.y <= 240 - 58, 'a smaller window keeps the button inside');
+  await other.focus('howdy-chat >> .fab');
+  await other.keyboard.press('Enter');
+  await other.waitForFunction(() => document.querySelector('howdy-chat').shadowRoot.querySelector('.wrap.open'));
+  await other.close();
   await site.click('howdy-chat >> .fab');
   const siteChat = () => site.frames().find((f) => f.url().includes('chat.html'));
   await expectText(siteChat, '#q', '');

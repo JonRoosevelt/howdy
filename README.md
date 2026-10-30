@@ -49,7 +49,7 @@ The **Sources** tab lists each connector with its live status (signed in as whom
 - **Popup** (click the icon): generate a Morning Brief or a report, and browse the history. Each brief and report opens as its own page in a new tab, with a public-domain botanical study from The Met, printed in two riso-style inks.
 - **Brief page:** check off to-dos (saved), open the source, or click a suggestion button to ask the chat about it.
 - **Themes:** Settings has a color theme picker (Riso Garden, Tokyo Night, Catppuccin, Gruvbox, Nord, Rosé Pine and more). The choice applies to every Howdy page, the chat and the floating button, and is kept across sessions.
-- **Chat:** a blue leaf-shaped button sits at the bottom right of every page. It opens a panel on the right where you can chat with the agent, and the page you are on is added as context. Ask for a report and the chat writes it, saves it to the history and opens it in a new tab.
+- **Chat:** a blue leaf-shaped button sits at the bottom right of every page. Drag it anywhere on the screen; it stays where you leave it on every page and across sessions. It opens a panel on the right where you can chat with the agent, and the page you are on is added as context. Ask for a report and the chat writes it, saves it to the history and opens it in a new tab.
 
 <table>
   <tr>
@@ -106,7 +106,7 @@ npx playwright install chromium
 npm run check
 ```
 
-Loads the extension in Chromium with a mocked LLM, Slack, Jira, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, and the chat panel on a regular site.
+Loads the extension in Chromium with a mocked LLM, Slack, Jira, Calendar and Gmail, and validates the tool loop, the session capture, the brief and report pages, the history, the chat panel on a regular site, and dragging the chat button (kept inside the window, remembered across pages, no panel opening after a drag).
 
 ## More
 

@@ -49,7 +49,9 @@ High priority: much of the to-do list for people working with tickets and PRs li
 
 - [ ] Source icons and avatars on brief items.
 - [ ] Optional brief on the new tab page (`chrome_url_overrides.newtab`).
-- [ ] Chat: keep the conversation when navigating or switching tabs (today each page starts fresh), a keyboard shortcut, and a way to hide the button per site.
+- [x] Chat: the button can be dragged anywhere and remembers its position across pages and sessions.
+- [x] Extension icon: two overprinted leaves in the riso inks.
+- [ ] Chat: keep the conversation when navigating or switching tabs (today each page starts fresh), a keyboard shortcut, a way to move the button with the keyboard, and a way to hide the button per site.
 - [ ] Chat: stream answers instead of waiting for the full reply.
 - [ ] Delete items from the history.
 
